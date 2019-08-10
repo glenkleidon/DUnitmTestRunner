@@ -8,19 +8,20 @@ const
   TOKEN_WHITE_SPACE = ' '#9#13#10;
   TOKEN_STOP_CHARS = TOKEN_WHITE_SPACE + ';,. :=()[]`+-/*';
   TOKEN_QUOTE = '''';
-  TOKEN_COMMENT_BLOCKS: Array [1 .. 3, 1 .. 2] of String = (('//', #13),
-    ('(*', '*)'), ('{', '}'));
+  TOKEN_COMMENT_BLOCKS: Array [1 .. 4, 1 .. 2] of String = (('//', #13),
+    ('(*', '*)'), ('{$', '}'), ('{', '}'));
   TOKEN_COMMENT_START = 1;
   TOKEN_COMMENT_STOP = 2;
   TOKEN_COMMENT_NAME_INDEX_EOL = 1;
-  TOKEN_COMMENT_NAME_INDEX_BRACKET_STAR=2;
-  TOKEN_COMMENT_NAME_INDEX_BRACE=3;
-
+  TOKEN_COMMENT_NAME_INDEX_BRACKET_STAR = 2;
+  TOKEN_DIRECTIVE_NAME_INDEX = 3;
+  TOKEN_COMMENT_NAME_INDEX_BRACE = 4;
 
 Type
   TokenInfo = Record
     isToken: boolean;
     isComment: boolean;
+    isCompilerDirective: boolean;
     StartPos: integer;
     EndPos: integer;
     Token: string;
@@ -75,20 +76,41 @@ begin
 
   First2Chars := Copy(AText, lPos, 2);
 
-  for i := 1 to 3 do
+  for i := 1 to 4 do
   begin
     if Copy(First2Chars, 1, length(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_START])
       ) = TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_START] then
     begin
-      Result.isComment := true;
-      Result.StartPos := lPos;
-      Result.EndPos := pos(AText, TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP]);
-      if (Result.EndPos=0) and (i=TOKEN_COMMENT_NAME_INDEX_EOL) then
+      if i = TOKEN_DIRECTIVE_NAME_INDEX then
       begin
-       // EOL then assume that the Comment is to the end of the line.
-       Result.EndPos := lSize;
+        Result.isCompilerDirective := true;
+      end
+      else
+      begin
+        Result.isComment := true;
       end;
-      Result.Token := Copy(AText, Result.StartPos, 1+Result.EndPos-Result.StartPos);
+      Result.isToken := true;
+      Result.StartPos := lPos;
+      Result.EndPos := pos(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP],
+        AText, lPos);
+      case i of
+        TOKEN_COMMENT_NAME_INDEX_EOL:
+          begin
+            Result.EndPos := Result.EndPos - 1;
+            if (Result.EndPos < 1) then
+              Result.EndPos := lSize;
+          end;
+        TOKEN_COMMENT_NAME_INDEX_BRACKET_STAR:
+          begin
+            Result.EndPos := Result.EndPos + 1;
+          end;
+        TOKEN_COMMENT_NAME_INDEX_BRACE:
+          begin
+            Result.EndPos := Result.EndPos + 1;
+          end;
+      end;
+      Result.Token := Copy(AText, Result.StartPos,
+        1 + Result.EndPos - Result.StartPos);
       exit;
     end;
   end;

@@ -1,3 +1,4 @@
+
 unit TestDelphiLexer;
 
 interface
@@ -8,7 +9,7 @@ const
   CR = #13#10;
   CR2 = #13#10;
 
-  TEST_DATA_DPR_FILE = '// Test data for DPR FIle' + CR2 +
+  TEST_DATA_DPR_FILE = '// Test data for DPR File' + CR2 +
     'program DummyTestFile;' + CR2 + '{$APPTYPE CONSOLE}' + CR2 + '{$R *.res}' +
     CR2 + 'uses' + CR + '  SysUtils,' + CR2 + '  MiniTestFramework,' + CR2 +
     '  TestDummyFile in ''TestDummyFile.pas'',' + CR2 + 'begin' + CR + '  try' +
@@ -21,7 +22,11 @@ const
     + CR2 + '    if FindCmdLineSwitch(''p'') then' + CR + '      readln;' + CR2
     + '  except' + CR + '    on E: Exception do' + CR +
     '      Writeln(E.ClassName, '': '', E.Message);' + CR2 + '  end;' + CR2 +
-    'end.' + CR;
+    ' (* Final Comment ...' + CR + ' *)' + CR + 'end.' + CR;
+
+  TEST_DATA_COMMENT_BRACE_WITHIN_BRACKETSTAR = 'library DummyTestDLL' + CR +
+    '  (*' + '    This is a comment with a second {redundant comment}' + CR +
+    '    inside it' + CR + '*)';
 
 implementation
 
@@ -61,11 +66,12 @@ var
 begin
   PasFile.Text := TEST_DATA_DPR_FILE;
 
-  lText := PasFile[0]; // first row of Comment EOL Comments
+  // first row of Comment EOL Comments
+  lText := PasFile[0];
 
   NewTest('Find // in first row without leading spaces');
   lResult := CheckForComment(lText);
-  CheckisTrue(lresult.isComment,'isComment is unexpectedly FALSE');
+  CheckisTrue(lResult.isComment, 'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 1');
   checkIsEqual(1, lResult.StartPos);
@@ -76,6 +82,37 @@ begin
   NewTest('Comment is equal to the first line of text');
   checkIsEqual(lText, lResult.Token);
 
+  // first row with leading Whitespace
+  lText := '     '#9 + PasFile[0];
+  NewTest('Find // in first row without leading spaces');
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isComment and lResult.isToken,
+    'isComment is unexpectedly FALSE');
+
+  NewTest('Start char is position 7');
+  checkIsEqual(7, lResult.StartPos);
+
+  NewTest('End Pos is to END OF LINE');
+  checkIsEqual(length(lText), lResult.EndPos);
+
+  NewTest('Comment is equal to the first line of text less whitespace');
+  checkIsEqual(copy(lText, 7, MAXINT), lResult.Token);
+
+  // Whole DPR File
+  lText := PasFile.Text;
+  NewTest('Find // in first row without leading spaces');
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isComment, 'isComment is unexpectedly FALSE');
+
+  NewTest('Start char is position 1');
+  checkIsEqual(1, lResult.StartPos);
+
+  lText := PasFile[0];
+  NewTest('End Pos is to END OF LINE');
+  checkIsEqual(length(lText), lResult.EndPos);
+
+  NewTest('Comment is equal to the first line of text');
+  checkIsEqual(lText, lResult.Token);
 
 end;
 
@@ -84,7 +121,72 @@ begin
   notImplemented;
 end;
 
-Procedure Check_Comment_Locates_BRACKETSTART_Comment;
+Procedure Check_Comment_Locates_BRACKETSTAR_Comment;
+var
+  lText: string;
+  lResult: TokenInfo;
+begin
+
+  lText := PasFile[24] + CR + PasFile[25];
+
+  NewTest('BracketStar Comment Block located');
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isComment and lResult.isToken,
+    'isComment is unexpectedly FALSE');
+
+  NewTest('Start char is position 2');
+  checkIsEqual(2, lResult.StartPos);
+
+  NewTest('End Pos is to END OF BLOCK');
+  checkIsEqual(length(lText), lResult.EndPos);
+
+  NewTest('Comment is equal to the first line of text');
+  checkIsEqual(copy(lText, 2, MAXINT), lResult.Token);
+
+  NewTest('Embedded Brace is returned in Token');
+  lText := copy(TEST_DATA_COMMENT_BRACE_WITHIN_BRACKETSTAR, 22, MAXINT);
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isComment and (pos('{redundant comment}', lResult.Token) >
+    0), 'Embedded Brace is not present as expected: ' + CR + lResult.Token);
+
+end;
+
+Procedure Check_Comment_Locates_Compiler_Directive;
+var
+  lText: string;
+  lResult: TokenInfo;
+  i: integer;
+begin
+
+  lText := '';
+  for i := 2 to 4 do
+    lText := lText + PasFile[i] + CR;
+
+  NewTest('Compiler Directive located');
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isCompilerDirective and lResult.isToken,
+    'isCompilerDirective is unexpectedly FALSE');
+
+  NewTest('Start char is position 1');
+  checkIsEqual(1, lResult.StartPos);
+
+  NewTest('End Pos is to END OF LINE');
+  checkIsEqual(18, lResult.EndPos);
+
+  NewTest('Directive is App Console');
+  checkIsEqual('{$APPTYPE CONSOLE}', lResult.Token);
+
+  lResult := CheckForComment(lText, lResult.EndPos+1);
+  CheckisTrue(lResult.isCompilerDirective and lResult.isToken,
+    'isCompilerDirective is unexpectedly FALSE');
+
+  NewTest('Directive is Resource wildcard');
+  checkIsEqual('{$R *.res}', lResult.Token);
+
+
+end;
+
+Procedure Check_Comment_Locates_Complex_BRACKETSTAR_Comment;
 begin
   notImplemented;
 end;
@@ -101,11 +203,17 @@ AddTestCase('Check Comment returns false for empty string',
 AddTestCase('EOL Comments Located as expected',
   Check_Comment_Locates_EOL_Comment);
 
+AddTestCase('Compiler Directive Located as expected',
+  Check_Comment_Locates_Compiler_Directive);
+
 AddTestCase('Brace Comments Located as expected',
   Check_Comment_Locates_BRACE_Comment);
 
 AddTestCase('BracketStar (* *) Comments Located as expected',
-  Check_Comment_Locates_BRACKETSTART_Comment);
+  Check_Comment_Locates_BRACKETSTAR_Comment);
+
+AddTestCase('Complex BracketStar (* *) Comments Located as expected',
+  Check_Comment_Locates_Complex_BRACKETSTAR_Comment);
 
 FinaliseSet(Finalise);
 
