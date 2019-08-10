@@ -5,7 +5,12 @@ program TestBuilder;
 {$R *.res}
 
 uses
-  SysUtils;
+  SysUtils,
+  RecursiveFolderSearch in 'RecursiveFolderSearch.pas',
+  MiniTestFramework in 'ComponentSource\DUnitm\MiniTestFramework.pas',
+  uTestBuilder in 'uTestBuilder.pas',
+  uTestBuilder.ProjectInfo in 'uTestBuilder.ProjectInfo.pas',
+  DUnitm.Constants in 'DUnitm.Constants.pas';
 
 begin
   try

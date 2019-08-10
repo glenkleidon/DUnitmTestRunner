@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{3F7AF399-4248-427C-907A-5EB7DF925913}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="TestBuilder.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\TestRunnerTests.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\TestLexer.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="TestBuilder">
+        <MSBuild Projects="TestBuilder.dproj"/>
+    </Target>
+    <Target Name="TestBuilder:Clean">
+        <MSBuild Projects="TestBuilder.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestBuilder:Make">
+        <MSBuild Projects="TestBuilder.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestRunnerTests">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj"/>
+    </Target>
+    <Target Name="TestRunnerTests:Clean">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestRunnerTests:Make">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestLexer">
+        <MSBuild Projects="Tests\TestLexer.dproj"/>
+    </Target>
+    <Target Name="TestLexer:Clean">
+        <MSBuild Projects="Tests\TestLexer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestLexer:Make">
+        <MSBuild Projects="Tests\TestLexer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="TestBuilder;TestRunnerTests;TestLexer"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="TestBuilder:Clean;TestRunnerTests:Clean;TestLexer:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="TestBuilder:Make;TestRunnerTests:Make;TestLexer:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

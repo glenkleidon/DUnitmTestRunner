@@ -1,0 +1,84 @@
+unit RecursiveFolderSearch;
+
+interface
+
+uses SysUtils;
+
+Function SearchFolderForFiles(const AFilter: string; const AStartFolder: String;
+  AOptions: string = ''): string; overload;
+Procedure SearchFolderForFiles(const AFilter: string;
+  const AStartFolder: String; ABuilder: TStringBuilder;
+  AOptions: string = ''); overload;
+
+implementation
+
+uses Classes;
+
+Function SearchFolderForFiles(const AFilter: string; const AStartFolder: String;
+  AOptions: string = ''): string;
+var
+  lBuilder: TStringBuilder;
+begin
+  Result := '';
+  lBuilder := TStringBuilder.create;
+  try
+    SearchFolderForFiles(AFilter, AStartFolder, lBuilder, AOptions);
+    Result := lBuilder.ToString;
+  finally
+    freeandnil(lBuilder);
+  end;
+end;
+
+Procedure SearchFolderForFiles(const AFilter: string;
+  const AStartFolder: String; ABuilder: TStringBuilder; AOptions: string = '');
+var
+  lFileSearchRec,lFolderSearchRec: TSearchRec;
+  lSearchList: TStringlist;
+  lSearchStr: String;
+  lStartFolder, lSubFolder, lExtension: String;
+  i: integer;
+begin
+  lSearchList := TStringlist.create;
+  try
+    lSearchList.Text := StringReplace(AFilter, ';', #13#10, [rfReplaceAll]);
+    lStartFolder := IncludeTrailingPathDelimiter(AStartFolder);
+
+    // Locate the Files in this folder
+    for i := 0 to lSearchList.Count - 1 do
+    begin
+      lSearchStr := lSearchList[i];
+      lExtension := extractFileExt(lSearchStr);
+      if findfirst(lStartFolder + lSearchStr, 0, lFolderSearchRec) = 0 then
+        try
+          repeat
+            if SameText(extractFileExt(lFolderSearchRec.name), lExtension) then
+            begin
+              ABuilder.Append(lStartFolder + lFolderSearchRec.name + #13#10);
+            end;
+          until findnext(lFolderSearchRec) <> 0;
+        finally
+          findclose(lFolderSearchRec);
+        end;
+    end;
+
+    // Now do the Subfolders
+    if findfirst(lStartFolder+'*', faDirectory, lFolderSearchRec) = 0 then
+      try
+        repeat
+          if (lFolderSearchRec.name[1] = '.') or (lFolderSearchrec.Attr and faDirectory =0)  then
+            continue;
+          lSubFolder := lStartFolder + lFolderSearchRec.name;
+          SearchFolderForFiles(lSearchList.Text, lSubFolder, ABuilder,
+            AOptions);
+        until findnext(lFolderSearchRec) <> 0;
+      finally
+        findclose(lFolderSearchRec);
+      end;
+
+  finally
+    freeandnil(lSearchList);
+  end;
+
+end;
+
+end.
