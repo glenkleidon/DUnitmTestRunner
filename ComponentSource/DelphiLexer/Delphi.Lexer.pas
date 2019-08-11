@@ -6,7 +6,7 @@ uses SysUtils;
 
 const
   TOKEN_WHITE_SPACE = ' '#9#13#10;
-  TOKEN_STOP_CHARS = TOKEN_WHITE_SPACE + ';,. :=()[]`+-/*';
+  TOKEN_STOP_CHARS = TOKEN_WHITE_SPACE + ' ;,. :=()[]`+-/*';
   TOKEN_QUOTE = '''';
   TOKEN_COMMENT_BLOCKS: Array [1 .. 4, 1 .. 2] of String = (('//', #13),
     ('(*', '*)'), ('{$', '}'), ('{', '}'));
@@ -18,7 +18,7 @@ const
   TOKEN_COMMENT_NAME_INDEX_BRACE = 4;
 
 Type
-  TokenInfo = Record
+  TTokenInfo = Record
     isToken: boolean;
     isComment: boolean;
     isCompilerDirective: boolean;
@@ -27,12 +27,12 @@ Type
     Token: string;
   End;
 
-  TokenInfoHelper = Record helper for TokenInfo
+  TTokenInfoHelper = Record helper for TTokenInfo
     Procedure Init;
   End;
 
-Function NextToken(AText: string; AStartPos: integer = 1): TokenInfo;
-Function CheckForComment(AText: string; AStartPos: integer = 1): TokenInfo;
+Function NextToken(AText: string; AStartPos: integer = 1): TTokenInfo;
+Function CheckForComment(AText: string; AStartPos: integer = 1): TTokenInfo;
 
 implementation
 
@@ -60,7 +60,7 @@ begin
 
 end;
 
-Function CheckForComment(AText: string; AStartPos: integer = 1): TokenInfo;
+Function CheckForComment(AText: string; AStartPos: integer = 1): TTokenInfo;
 var
   lSize: integer;
   lPos, lCommentIndex, i: integer;
@@ -106,7 +106,7 @@ begin
           end;
         TOKEN_COMMENT_NAME_INDEX_BRACE:
           begin
-            Result.EndPos := Result.EndPos + 1;
+            Result.EndPos := Result.EndPos;
           end;
       end;
       Result.Token := Copy(AText, Result.StartPos,
@@ -117,12 +117,13 @@ begin
 
 end;
 
-Function NextToken(AText: string; AStartPos: integer = 1): TokenInfo;
+Function NextToken(AText: string; AStartPos: integer = 1): TTokenInfo;
 var
   p, lStart: integer;
   lSize: integer;
   c: Char;
   lInQuote: boolean;
+  lToken: string;
 begin
   Result.Init;
 
@@ -131,22 +132,11 @@ begin
   if lStart = -1 then
     exit;
 
-  lSize := length(AText);
-
-  c := AText[lStart];
-  while (lStart < lSize) and (pos(c, TOKEN_WHITE_SPACE) = 0) do
-  begin
-    inc(lStart);
-    c := AText[lStart];
-  end;
-
-  if lStart >= lSize then
-    exit;
-
   Result := CheckForComment(AText, lStart);
-  if Result.isComment then
+  if (Result.isComment or Result.isCompilerDirective) then
     exit;
 
+  lSize := length(AText);
   Result.StartPos := lStart;
   Result.EndPos := lStart;
 
@@ -155,6 +145,7 @@ begin
 
   while (Result.EndPos < lSize) and (pos(c, TOKEN_STOP_CHARS) = 0) do
   begin
+    lToken := lToken + c;
     if c = TOKEN_QUOTE then
     begin
       if lInQuote then
@@ -176,11 +167,13 @@ begin
     c := AText[Result.EndPos];
   end;
 
+  Result.Token := lToken;
+
 end;
 
 { TokeInfoHelper }
 
-procedure TokenInfoHelper.Init;
+procedure TTokenInfoHelper.Init;
 begin
   self.isToken := false;
   self.isComment := false;

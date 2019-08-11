@@ -1,4 +1,3 @@
-
 unit TestDelphiLexer;
 
 interface
@@ -18,9 +17,10 @@ const
     '    // So the Unit Test Sets are encapsulated entirely in the Test Unit.' +
     CR + '    // -- ie we dont defined the sets in the DPR any more,' + CR +
     '    //    they are added in the initialization section of the' + CR +
-    '    //    Test unit.' + CR2 + '    RunTestSets;' + CR + '    TestSummary;'
-    + CR2 + '    if FindCmdLineSwitch(''p'') then' + CR + '      readln;' + CR2
-    + '  except' + CR + '    on E: Exception do' + CR +
+    '    //    Test unit.' + CR2 + '{ Run the tests}' + CR + '    RunTestSets; '
+    + CR + '  {Output the Summary to Screen} ' + CR + '    TestSummary;' + CR2 +
+    '    if FindCmdLineSwitch(''p'') then' + CR + '      readln;' + CR2 +
+    '  except' + CR + '    on E: Exception do' + CR +
     '      Writeln(E.ClassName, '': '', E.Message);' + CR2 + '  end;' + CR2 +
     ' (* Final Comment ...' + CR + ' *)' + CR + 'end.' + CR;
 
@@ -45,7 +45,7 @@ end;
 
 procedure Check_Comment_Returns_False_For_Empty_string;
 var
-  lResult: TokenInfo;
+  lResult: TTokenInfo;
 begin
   NewTest('Empty string does cause exception');
   try
@@ -62,7 +62,7 @@ end;
 Procedure Check_Comment_Locates_EOL_Comment;
 var
   lText: string;
-  lResult: TokenInfo;
+  lResult: TTokenInfo;
 begin
   PasFile.Text := TEST_DATA_DPR_FILE;
 
@@ -117,17 +117,36 @@ begin
 end;
 
 Procedure Check_Comment_Locates_BRACE_Comment;
+var
+  lText: string;
+  lResult: TTokenInfo;
 begin
-  notImplemented;
+
+  lText := PasFile[18] + CR;
+
+  NewTest('Brace Comment Block located');
+  lResult := CheckForComment(lText);
+  CheckisTrue(lResult.isComment and lResult.isToken,
+    'isComment is unexpectedly FALSE');
+
+  NewTest('Start char is position 2');
+  checkIsEqual(3, lResult.StartPos);
+
+  NewTest('End Pos is to END OF BLOCK');
+  checkIsEqual(length(lText) - 3, lResult.EndPos);
+
+  NewTest('Comment is equal to the first line of text');
+  checkIsEqual(copy(lText, 3, 30), lResult.Token);
+
 end;
 
 Procedure Check_Comment_Locates_BRACKETSTAR_Comment;
 var
   lText: string;
-  lResult: TokenInfo;
+  lResult: TTokenInfo;
 begin
 
-  lText := PasFile[24] + CR + PasFile[25];
+  lText := PasFile[26] + CR + PasFile[27];
 
   NewTest('BracketStar Comment Block located');
   lResult := CheckForComment(lText);
@@ -154,7 +173,7 @@ end;
 Procedure Check_Comment_Locates_Compiler_Directive;
 var
   lText: string;
-  lResult: TokenInfo;
+  lResult: TTokenInfo;
   i: integer;
 begin
 
@@ -176,13 +195,12 @@ begin
   NewTest('Directive is App Console');
   checkIsEqual('{$APPTYPE CONSOLE}', lResult.Token);
 
-  lResult := CheckForComment(lText, lResult.EndPos+1);
+  lResult := CheckForComment(lText, lResult.EndPos + 1);
   CheckisTrue(lResult.isCompilerDirective and lResult.isToken,
     'isCompilerDirective is unexpectedly FALSE');
 
   NewTest('Directive is Resource wildcard');
   checkIsEqual('{$R *.res}', lResult.Token);
-
 
 end;
 
@@ -191,29 +209,60 @@ begin
   notImplemented;
 end;
 
+Procedure Check_NextToken_Returns_each_token_in_Turn;
+var
+  lToken: TTokenInfo;
+  lPos: integer;
+begin
+  lPos := 1;
+  // Locate the Compiler Directive
+  NewTest('Skip Over the Comments, locating "Program" Token');
+  Repeat
+    lToken := NextToken(PasFile.Text, lPos);
+    lPos := lToken.EndPos + 1;
+  Until not lToken.isComment;
+  checkIsEqual('program', lToken.Token);
+
+  lToken := NextToken(PasFile.Text, lPos);
+  lPos := lToken.EndPos + 1;
+
+  NewTest('locate Program Name "DummyTestFile"');
+  checkIsEqual('DummyTestFile', lToken.Token);
+
+  NewTest('Locate Compilter Directive, locating Uses clause');
+  Repeat
+    lToken := NextToken(PasFile.Text, lPos);
+    lPos := lToken.EndPos + 1;
+  Until lToken.isCompilerDirective;
+  CheckisTrue(lToken.isCompilerDirective,
+    'Token was expected to be a Compiler Directive or comment but was not');
+  checkIsEqual('{$APPTYPE CONSOLE}', lToken.Token);
+
+end;
+
 initialization
 
 NewSet('Delphi Lexer Tests in TestDelphiLexer.pas');
 
 PrepareSet(Prepare);
-
+// Comments
 AddTestCase('Check Comment returns false for empty string',
   Check_Comment_Returns_False_For_Empty_string);
-
 AddTestCase('EOL Comments Located as expected',
   Check_Comment_Locates_EOL_Comment);
-
 AddTestCase('Compiler Directive Located as expected',
   Check_Comment_Locates_Compiler_Directive);
-
 AddTestCase('Brace Comments Located as expected',
   Check_Comment_Locates_BRACE_Comment);
-
 AddTestCase('BracketStar (* *) Comments Located as expected',
   Check_Comment_Locates_BRACKETSTAR_Comment);
-
 AddTestCase('Complex BracketStar (* *) Comments Located as expected',
   Check_Comment_Locates_Complex_BRACKETSTAR_Comment);
+
+// Next Token.
+
+AddTestCase('Find Tokens in the File',
+  Check_NextToken_Returns_each_token_in_Turn);
 
 FinaliseSet(Finalise);
 

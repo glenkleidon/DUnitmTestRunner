@@ -10,7 +10,8 @@ uses
   MiniTestFramework in 'ComponentSource\DUnitm\MiniTestFramework.pas',
   uTestBuilder in 'uTestBuilder.pas',
   uTestBuilder.ProjectInfo in 'uTestBuilder.ProjectInfo.pas',
-  DUnitm.Constants in 'DUnitm.Constants.pas';
+  DUnitm.Constants in 'DUnitm.Constants.pas',
+  Delphi.Lexer in 'ComponentSource\DelphiLexer\Delphi.Lexer.pas';
 
 begin
   try
