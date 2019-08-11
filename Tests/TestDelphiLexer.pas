@@ -11,7 +11,7 @@ const
   TEST_DATA_DPR_FILE = '// Test data for DPR File' + CR2 +
     'program DummyTestFile;' + CR2 + '{$APPTYPE CONSOLE}' + CR2 + '{$R *.res}' +
     CR2 + 'uses' + CR + '  SysUtils,' + CR2 + '  MiniTestFramework,' + CR2 +
-    '  TestDummyFile in ''TestDummyFile.pas'',' + CR2 + 'begin' + CR + '  try' +
+    '  TestDummyFile in ''TestDummyFile.pas'';' + CR2 + 'begin' + CR + '  try' +
     CR + '    Title(''Unit Test Cases for Delphi Lexer Project'');' + CR2 +
     '    // Note we are using the new Unit based Test Pattern,' + CR +
     '    // So the Unit Test Sets are encapsulated entirely in the Test Unit.' +
@@ -23,6 +23,24 @@ const
     '  except' + CR + '    on E: Exception do' + CR +
     '      Writeln(E.ClassName, '': '', E.Message);' + CR2 + '  end;' + CR2 +
     ' (* Final Comment ...' + CR + ' *)' + CR + 'end.' + CR;
+
+  TEST_DATA_UNIT_1 =
+  'unit DummyUnit;'+CR2+
+  'interface'+CR2+
+  ' uses SysUtils, SomeUnit, SomeOtherUnit;'+CR2+
+  'const'+CR +
+  '  SOME_CONSTANT=2;'+CR2+
+  'implementation'+CR2+
+  ' uses SomeThirdUnit, SomeLastUnit;'+CR2+
+  'Function Abc: string;'+CR+
+  'begin'+CR+
+  '  result := ''ABC'';'+CR+
+  'end;'+CR2+
+  'initialization'+CR2+
+  ' DoNothing;'+CR2+
+  'end.';
+
+
 
   TEST_DATA_COMMENT_BRACE_WITHIN_BRACKETSTAR = 'library DummyTestDLL' + CR +
     '  (*' + '    This is a comment with a second {redundant comment}' + CR +
@@ -56,7 +74,8 @@ begin
       checkException(e);
   end;
   NewTest('IsComment is expected to be false');
-  CheckIsFalse(lResult.isComment, 'IsComment is Unexpectedly true!');
+  CheckIsFalse(lResult.TokenType = dtComment,
+    'IsComment is Unexpectedly true!');
 end;
 
 Procedure Check_Comment_Locates_EOL_Comment;
@@ -71,13 +90,13 @@ begin
 
   NewTest('Find // in first row without leading spaces');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment, 'isComment is unexpectedly FALSE');
+  CheckisTrue(lResult.TokenType = dtComment, 'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 1');
   checkIsEqual(1, lResult.StartPos);
 
   NewTest('End Pos is to END OF LINE');
-  checkIsEqual(length(lText), lResult.EndPos);
+  checkIsEqual(length(lText)+1, lResult.EndPos);
 
   NewTest('Comment is equal to the first line of text');
   checkIsEqual(lText, lResult.Token);
@@ -86,14 +105,14 @@ begin
   lText := '     '#9 + PasFile[0];
   NewTest('Find // in first row without leading spaces');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment and lResult.isToken,
+  CheckisTrue((lResult.TokenType = dtComment) and lResult.isToken,
     'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 7');
   checkIsEqual(7, lResult.StartPos);
 
   NewTest('End Pos is to END OF LINE');
-  checkIsEqual(length(lText), lResult.EndPos);
+  checkIsEqual(length(lText)+1, lResult.EndPos);
 
   NewTest('Comment is equal to the first line of text less whitespace');
   checkIsEqual(copy(lText, 7, MAXINT), lResult.Token);
@@ -102,7 +121,7 @@ begin
   lText := PasFile.Text;
   NewTest('Find // in first row without leading spaces');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment, 'isComment is unexpectedly FALSE');
+  CheckisTrue(lResult.TokenType = dtComment, 'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 1');
   checkIsEqual(1, lResult.StartPos);
@@ -126,7 +145,7 @@ begin
 
   NewTest('Brace Comment Block located');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment and lResult.isToken,
+  CheckisTrue((lResult.TokenType = dtComment) and lResult.isToken,
     'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 2');
@@ -150,7 +169,7 @@ begin
 
   NewTest('BracketStar Comment Block located');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment and lResult.isToken,
+  CheckisTrue((lResult.TokenType = dtComment) and lResult.isToken,
     'isComment is unexpectedly FALSE');
 
   NewTest('Start char is position 2');
@@ -165,8 +184,9 @@ begin
   NewTest('Embedded Brace is returned in Token');
   lText := copy(TEST_DATA_COMMENT_BRACE_WITHIN_BRACKETSTAR, 22, MAXINT);
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isComment and (pos('{redundant comment}', lResult.Token) >
-    0), 'Embedded Brace is not present as expected: ' + CR + lResult.Token);
+  CheckisTrue((lResult.TokenType = dtComment) and
+    (pos('{redundant comment}', lResult.Token) > 0),
+    'Embedded Brace is not present as expected: ' + CR + lResult.Token);
 
 end;
 
@@ -183,7 +203,7 @@ begin
 
   NewTest('Compiler Directive located');
   lResult := CheckForComment(lText);
-  CheckisTrue(lResult.isCompilerDirective and lResult.isToken,
+  CheckisTrue((lResult.TokenType=dtCompilerDirective) and lResult.isToken,
     'isCompilerDirective is unexpectedly FALSE');
 
   NewTest('Start char is position 1');
@@ -196,7 +216,7 @@ begin
   checkIsEqual('{$APPTYPE CONSOLE}', lResult.Token);
 
   lResult := CheckForComment(lText, lResult.EndPos + 1);
-  CheckisTrue(lResult.isCompilerDirective and lResult.isToken,
+  CheckisTrue((lResult.TokenType=dtCompilerDirective) and lResult.isToken,
     'isCompilerDirective is unexpectedly FALSE');
 
   NewTest('Directive is Resource wildcard');
@@ -220,7 +240,7 @@ begin
   Repeat
     lToken := NextToken(PasFile.Text, lPos);
     lPos := lToken.EndPos + 1;
-  Until not lToken.isComment;
+  Until lToken.TokenType<>dtComment;
   checkIsEqual('program', lToken.Token);
 
   lToken := NextToken(PasFile.Text, lPos);
@@ -229,14 +249,60 @@ begin
   NewTest('locate Program Name "DummyTestFile"');
   checkIsEqual('DummyTestFile', lToken.Token);
 
-  NewTest('Locate Compilter Directive, locating Uses clause');
+  NewTest('Locate Compiler Directive');
   Repeat
     lToken := NextToken(PasFile.Text, lPos);
     lPos := lToken.EndPos + 1;
-  Until lToken.isCompilerDirective;
-  CheckisTrue(lToken.isCompilerDirective,
+  Until (lToken.TokenType=dtCompilerDirective) or (lPos>length(PasFile.Text));
+  CheckisTrue(lToken.TokenType=dtCompilerDirective,
     'Token was expected to be a Compiler Directive or comment but was not');
   checkIsEqual('{$APPTYPE CONSOLE}', lToken.Token);
+
+  NewTest('Locate 2nd Compiler Directive');
+  lToken := NextToken(PasFile.Text, lPos);
+  lPos := lToken.EndPos + 1;
+  CheckisTrue(lToken.TokenType=dtCompilerDirective);
+
+  NewTest('Locate Uses Directive');
+  lToken := NextToken(PasFile.Text, lPos);
+  lPos := lToken.EndPos + 1;
+  CheckisEqual('uses',lToken.Token);
+
+end;
+
+Procedure Check_Locate_Token_returns_correct_token;
+var
+  lToken: TTokenInfo;
+begin
+
+  newTest('Locate Uses Clause');
+  lToken := LocateToken('uses', dtUnknown,TEST_DATA_DPR_FILE, 1, 'Implementation' );
+  CheckIsEqual('uses',lToken.Token);
+  CheckisTrue(ltoken.TokenType=dtUnknown);
+
+  newTest('Dont find non existent token in Interface section');
+  lToken := LocateToken('nonexistent', dtUnknown,TEST_DATA_DPR_FILE, 1, 'Implementation' );
+  CheckIsTrue(length(lToken.Token)=0);
+  CheckIsTrue(lToken.TokenType=dtUnknown);
+
+  NewTest('Locate Uses Clause in Implementation');
+  lToken := LocateToken('uses', dtUnknown, TEST_DATA_UNIT_1,1, 'Implementation');
+  lToken := LocateToken('uses', dtUnknown, TEST_DATA_UNIT_1,lToken.EndPos, 'initialization');
+  CheckIsEqual('uses',lToken.Token);
+  CheckisTrue(ltoken.TokenType=dtUnknown);
+  lToken := NextToken(TEST_DATA_UNIT_1, lToken.EndPos+1);
+  checkisEqual('SomeThirdUnit', lToken.Token);
+
+end;
+
+Procedure Check_TextBetweenTokens_Returns_Correct_result;
+var lResult: string;
+begin
+  NewTest('Located the Uses Clause text for the Test Unit');
+  lResult := TextBeweenTokens('uses', dtUnknown, ';', dtSeparator,
+    TEST_DATA_UNIT_1);
+  DisplayModeRows(true);
+  checkIsEqual(' SysUtils, SomeUnit, SomeOtherUnit',lResult);
 
 end;
 
@@ -263,6 +329,10 @@ AddTestCase('Complex BracketStar (* *) Comments Located as expected',
 
 AddTestCase('Find Tokens in the File',
   Check_NextToken_Returns_each_token_in_Turn);
+AddTestCase('Find Tokens using LocateToken',
+  Check_Locate_Token_returns_correct_token);
+AddTestCase('Find Text between Tokens "Uses" and ","',
+  Check_TextBetweenTokens_Returns_Correct_result);
 
 FinaliseSet(Finalise);
 
