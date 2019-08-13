@@ -28,36 +28,40 @@ implementation
 
 uses Classes, DUnitm.Constants, Delphi.Lexer;
 
-
-Function FirstWordOfLine(ALine: string): String;
-begin
-
-end;
-
-Procedure StripLeadingComments(APASFile: TStrings);
-begin
-  while True do
-
-end;
-
 Function ExtractUsesClause(AProjectFile: TStrings;
   AClauseTypes: TUnitClauseTypes): String;
+var
+  lUses: string;
+  lImplementationToken: TTokenInfo;
+
 begin
-  if (ucDPR in AClauseTypes) then
+  result := '';
+  if (ucInterface in AClauseTypes) or (ucDPR in AClauseTypes) then
   begin
-    // do we find the
+    result := result + TextBeweenTokens('uses', dtKeyWord, ';', dtSeparator,
+      AProjectFile.Text);
   end;
+  lImplementationToken := LocateToken('implementation', dtKeyword,
+    AProjectFile.Text);
+  if not((ucImplementation in AClauseTypes) and (lImplementationToken.isToken))
+  then
+    exit;
+  // locate inner Uses Clause
+  result := result + TextBeweenTokens('uses', dtUnknown, ';', dtSeparator,
+    AProjectFile.Text);
 
 end;
 
-Function LocateMiniTestFrameworkUnit(AProjectFile: TStrings): integer;
+Function LocateMiniTestFrameworkUnit(AProjectFile: TStrings): boolean;
+var
+  lUses: string;
 begin
-  Result := pos(lowercase(UNIT_NAME_MINITESTFRAMEWORK),
-    lowercase(AProjectFile.Text));
-  if Result = 0 then
+  result := pos(lowercase(UNIT_NAME_MINITESTFRAMEWORK),
+    lowercase(AProjectFile.Text)) > 0;
+  if not result then
     exit;
-
   // Is it actually in the uses Clause
+  lUses := ExtractUsesClause(AProjectFile, [ucDPR]);
 
 end;
 
@@ -76,7 +80,7 @@ function GetTestProjectInfo(AProjectFile: string): TTestProjectInfo;
 var
   lDPRFile: TStringlist;
 begin
-  Result.Init;
+  result.Init;
 
   if not fileexists(AProjectFile) then
     exit;
@@ -87,13 +91,16 @@ begin
   lDPRFile := TStringlist.Create;
   try
     lDPRFile.LoadFromFile(AProjectFile);
-    if not LocateMiniTestFrameworkUnit(lDPRFile) then
+    if not LocateMiniTestFrameworkUnit(lDPRFile) then exit;
+    result.IsTestProject := true;
 
-    finally
-      Freeandnil(lDPRFile);
-    end;
+    writeln('Still need to get Titles, ProjectSearchPath, TestUnitList');
+    writeln('  and projectbasedCases for', AProjectFile );
 
+  finally
+    Freeandnil(lDPRFile);
   end;
 
+end;
 
 end.

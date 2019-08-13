@@ -276,20 +276,20 @@ var
 begin
 
   newTest('Locate Uses Clause');
-  lToken := LocateToken('uses', dtUnknown,TEST_DATA_DPR_FILE, 1, 'Implementation' );
+  lToken := LocateToken('uses', dtKeyword,TEST_DATA_DPR_FILE, 1, 'Implementation' );
   CheckIsEqual('uses',lToken.Token);
-  CheckisTrue(ltoken.TokenType=dtUnknown);
+  CheckisTrue(ltoken.TokenType=dtKeyWord);
 
   newTest('Dont find non existent token in Interface section');
-  lToken := LocateToken('nonexistent', dtUnknown,TEST_DATA_DPR_FILE, 1, 'Implementation' );
+  lToken := LocateToken('nonexistent', dtunknown,TEST_DATA_DPR_FILE, 1, 'Implementation' );
   CheckIsTrue(length(lToken.Token)=0);
   CheckIsTrue(lToken.TokenType=dtUnknown);
 
   NewTest('Locate Uses Clause in Implementation');
-  lToken := LocateToken('uses', dtUnknown, TEST_DATA_UNIT_1,1, 'Implementation');
-  lToken := LocateToken('uses', dtUnknown, TEST_DATA_UNIT_1,lToken.EndPos, 'initialization');
+  lToken := LocateToken('uses', dtKeyword, TEST_DATA_UNIT_1,1, 'Implementation');
+  lToken := LocateToken('uses', dtKeyword, TEST_DATA_UNIT_1,lToken.EndPos, 'initialization');
   CheckIsEqual('uses',lToken.Token);
-  CheckisTrue(ltoken.TokenType=dtUnknown);
+  CheckisTrue(ltoken.TokenType=dtKeyword);
   lToken := NextToken(TEST_DATA_UNIT_1, lToken.EndPos+1);
   checkisEqual('SomeThirdUnit', lToken.Token);
 
@@ -299,7 +299,7 @@ Procedure Check_TextBetweenTokens_Returns_Correct_result;
 var lResult: string;
 begin
   NewTest('Located the Uses Clause text for the Test Unit');
-  lResult := TextBeweenTokens('uses', dtUnknown, ';', dtSeparator,
+  lResult := TextBeweenTokens('uses', dtKeyWord, ';', dtSeparator,
     TEST_DATA_UNIT_1);
   DisplayModeRows(true);
   checkIsEqual(' SysUtils, SomeUnit, SomeOtherUnit',lResult);

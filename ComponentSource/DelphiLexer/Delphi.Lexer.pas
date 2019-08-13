@@ -52,6 +52,21 @@ Function TextBeweenTokens(AStartToken: String;
 
 implementation
 
+const
+  DELPHI_RESERVED_KEYWORDS =
+    ',and,array,as,asm,begin,case,class,const,constructor,destructor,' +
+    'dispinterface,div,do,downto,else,end,except,exports,file,' +
+    'finalization,finally,for,function,goto,if,implementation,in,' +
+    'inherited,initialization,inline,interface,is,label,library,mod' +
+    ',nil,not,object,of,or,out,packed,procedure,program,property,' +
+    'raise,record,repeat,resourcestring,set,shl,shr,string,then,' +
+    'threadvar,to,try,type,unit,until,uses,var,while,with,xor,';
+
+function IsKeyWord(AToken: TTokenInfo): boolean;
+begin
+  result := pos(','+AToken.Token+',', DELPHI_RESERVED_KEYWORDS)>0;
+end;
+
 Function SkipWhiteSpace(AText: String; AStartPos: integer = 1): integer;
 // inline;
 var
@@ -59,19 +74,19 @@ var
   lSize: integer;
 begin
   // locate the first non whitespace
-  Result := -1;
+  result := -1;
 
   lSize := length(AText);
   if (AStartPos) > lSize then
     exit;
 
-  Result := AStartPos;
+  result := AStartPos;
 
-  c := AText[Result];
-  while (Result < lSize) and (pos(c, TOKEN_WHITE_SPACE) <> 0) do
+  c := AText[result];
+  while (result < lSize) and (pos(c, TOKEN_WHITE_SPACE) <> 0) do
   begin
-    inc(Result);
-    c := AText[Result];
+    inc(result);
+    c := AText[result];
   end;
 
 end;
@@ -82,7 +97,7 @@ var
   lPos, lCommentIndex, i: integer;
   First2Chars: String;
 begin
-  Result.Init;
+  result.Init;
 
   lPos := SkipWhiteSpace(AText, AStartPos);
 
@@ -99,34 +114,34 @@ begin
     begin
       if i = TOKEN_DIRECTIVE_NAME_INDEX then
       begin
-        Result.TokenType := dtCompilerDirective;
+        result.TokenType := dtCompilerDirective;
       end
       else
       begin
-        Result.TokenType := dtComment;
+        result.TokenType := dtComment;
       end;
-      Result.isToken := true;
-      Result.StartPos := lPos;
-      Result.EndPos := pos(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP],
+      result.isToken := true;
+      result.StartPos := lPos;
+      result.EndPos := pos(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP],
         AText, lPos);
       case i of
         TOKEN_COMMENT_NAME_INDEX_EOL:
           begin
-            Result.EndPos := Result.EndPos - 1;
-            if (Result.EndPos < 1) then
-              Result.EndPos := lSize + 1;
+            result.EndPos := result.EndPos - 1;
+            if (result.EndPos < 1) then
+              result.EndPos := lSize + 1;
           end;
         TOKEN_COMMENT_NAME_INDEX_BRACKET_STAR:
           begin
-            Result.EndPos := Result.EndPos + 1;
+            result.EndPos := result.EndPos + 1;
           end;
         TOKEN_DIRECTIVE_NAME_INDEX, TOKEN_COMMENT_NAME_INDEX_BRACE:
           begin
             // no modification required
           end;
       end;
-      Result.Token := Copy(AText, Result.StartPos,
-        1 + Result.EndPos - Result.StartPos);
+      result.Token := Copy(AText, result.StartPos,
+        1 + result.EndPos - result.StartPos);
       exit;
     end;
   end;
@@ -141,23 +156,23 @@ var
   lInQuote, lDone: boolean;
   lToken: string;
 begin
-  Result.Init;
+  result.Init;
 
   // locate the first non whitespace
   lStart := SkipWhiteSpace(AText, AStartPos);
   if lStart = -1 then
     exit;
 
-  Result := CheckForComment(AText, lStart);
-  if (Result.TokenType in [dtCompilerDirective, dtComment]) then
+  result := CheckForComment(AText, lStart);
+  if (result.TokenType in [dtCompilerDirective, dtComment]) then
     exit;
 
   lSize := length(AText);
-  Result.StartPos := lStart;
-  Result.EndPos := lStart;
-  Result.TokenType := dtUnknown;
+  result.StartPos := lStart;
+  result.EndPos := lStart;
+  result.TokenType := dtUnknown;
 
-  c := AText[Result.EndPos];
+  c := AText[result.EndPos];
   lInQuote := c = TOKEN_QUOTE;
   lDone := false;
   while true do
@@ -166,68 +181,76 @@ begin
     begin
       if c = TOKEN_QUOTE then
       begin
-        if (Result.EndPos < lSize) and (AText[Result.EndPos + 1] <> TOKEN_QUOTE)
+        if (result.EndPos < lSize) and (AText[result.EndPos + 1] <> TOKEN_QUOTE)
         then
         begin
           // The end of a text literal token
-          Result.Terminator := TOKEN_QUOTE;
-          Result.TokenType := dtLiteral;
-          Result.TerminatorType := dtSeparator;
+          result.Terminator := TOKEN_QUOTE;
+          result.TokenType := dtLiteral;
+          result.TerminatorType := dtSeparator;
           break;
         end
       end
       else
       begin
         // We were NOT in quotes, therefore we have just hit one.
-        Result.TokenType := dtUnknown;
-        Result.Terminator := TOKEN_QUOTE;
-        Result.TerminatorType := dtSeparator;
+        result.TokenType := dtUnknown;
+        result.Terminator := TOKEN_QUOTE;
+        result.TerminatorType := dtSeparator;
         break;
       end;
       continue;
     end;
     if pos(c, TOKEN_SEPARATORS) > 0 then
     begin
-      if (Result.EndPos=Result.StartPos) then 
+      if (result.EndPos = result.StartPos) then
       begin
         lToken := c;
-        Result.TokenType := dtSeparator;
-      end else dec(Result.EndPos); 
-      Result.TerminatorType := dtSeparator;
-      Result.Terminator := c;
+        result.TokenType := dtSeparator;
+      end
+      else
+        dec(result.EndPos);
+      result.TerminatorType := dtSeparator;
+      result.Terminator := c;
       // account for the := operator
-      if (c = ':') and (Result.EndPos < lSize) and
-        (AText[Result.EndPos + 1] = '=') then
+      if (c = ':') and (result.EndPos < lSize) and
+        (AText[result.EndPos + 1] = '=') then
       begin
-        Result.TerminatorType := dtOperator;
-        Result.Terminator := ':=';
-        if (Result.EndPos=Result.StartPos) then Result.TokenType := dtOperator; 
+        result.TerminatorType := dtOperator;
+        result.Terminator := ':=';
+        if (result.EndPos = result.StartPos) then
+          result.TokenType := dtOperator;
       end;
       break;
     end
     else if pos(c, TOKEN_OPERATORS) > 0 then
     begin
-      if (Result.EndPos=Result.StartPos) then
+      if (result.EndPos = result.StartPos) then
       begin
-       lToken := c;
-       Result.TokenType := dtOperator;
-      end else dec(Result.EndPos);
-      Result.Terminator := c;
-      Result.TerminatorType := dtOperator;
+        lToken := c;
+        result.TokenType := dtOperator;
+      end
+      else
+        dec(result.EndPos);
+      result.Terminator := c;
+      result.TerminatorType := dtOperator;
       break;
     end;
-    inc(Result.EndPos);
-    if (Result.EndPos > lSize) then
+    inc(result.EndPos);
+    if (result.EndPos > lSize) then
     begin
-      Result.Terminator := '';
-      Result.TerminatorType := dtEOT;
+      result.Terminator := '';
+      result.TerminatorType := dtEOT;
       break;
     end;
     lToken := lToken + c;
-    c := AText[Result.EndPos];
+    c := AText[result.EndPos];
   end;
 
-  Result.Token := lToken;
+  result.Token := lToken;
+  if (result.TokenType=dtUnknown) then
+    if IsKeyWord(result) then
+      result.TokenType := dtKeyword;
 
 end;
 
@@ -239,7 +262,7 @@ var
   lToken: TTokenInfo;
   lDone, lDoStop, lUseTerminator: boolean;
 begin
-  Result.Init;
+  result.Init;
   lDoStop := length(AStopAt) > 0;
   lSize := length(AText);
   lPos := AStartPos;
@@ -250,12 +273,12 @@ begin
     if ((sameText(AToken, lToken.Token)) and (ATokenType = lToken.TokenType)) or
       (lUseTerminator and (sameText(lToken.Terminator, ATerminator))) then
     begin
-      Result := lToken;
+      result := lToken;
       exit;
     end
     else if (lDoStop) and (sameText(lToken.Token, AStopAt)) then
     begin
-      Result.EndPos := lToken.EndPos;
+      result.EndPos := lToken.EndPos;
       exit;
     end;
     lPos := lToken.EndPos + 1;
@@ -279,8 +302,8 @@ begin
   if not sameText(AEndToken, lEndToken.Token) then
     raise Exception.Create('End Token not found.');
 
-  Result := Copy(AText, lStartToken.EndPos+1,
-  lEndToken.EndPos - lStartToken.EndPos-1);
+  result := Copy(AText, lStartToken.EndPos + 1,
+    lEndToken.EndPos - lStartToken.EndPos - 1);
 end;
 
 { TokeInfoHelper }

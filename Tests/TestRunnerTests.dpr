@@ -6,7 +6,9 @@ program TestRunnerTests;
 uses
   SysUtils,
   MiniTestFramework,
-  TestRecursiveFolderSearch in 'TestRecursiveFolderSearch.pas';
+  TestRecursiveFolderSearch in 'TestRecursiveFolderSearch.pas',
+  TestTTestBuilder in 'TestTTestBuilder.pas',
+  Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas';
 
 begin
   try

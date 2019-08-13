@@ -13,9 +13,15 @@ uses
   DUnitm.Constants in 'DUnitm.Constants.pas',
   Delphi.Lexer in 'ComponentSource\DelphiLexer\Delphi.Lexer.pas';
 
+  var lStartFolder: string;
 begin
   try
-    { TODO -oUser -cConsole Main : Insert code here }
+    TestBuilderRootFolder := extractFilePath(Paramstr(0));
+    lStartFolder := Paramstr(1);
+    if (copy(lStartfolder,1,1)='.') then
+      lStartFolder := Expandfilename(TestBuilderRootFolder+lStartFolder);
+    TDUnitmTestBuilder.BuildAndRunTests(lStartFolder);
+    if FindCmdLineSwitch('p') then readln;
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
