@@ -94,6 +94,9 @@ begin
     if not LocateMiniTestFrameworkUnit(lDPRFile) then exit;
     result.IsTestProject := true;
 
+    // Ok this is a Test project. What is the title?
+
+
     writeln('Still need to get Titles, ProjectSearchPath, TestUnitList');
     writeln('  and projectbasedCases for', AProjectFile );
 

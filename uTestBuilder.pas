@@ -28,6 +28,7 @@ Type
   public
     constructor Create;
     destructor Destroy; override;
+    procedure RefreshProjectList;
     class Function BuildAndRunTests(AStartFolder: string): TBuildResult;
     Property ProjectList: String read GetProjectList;
     Property RootFolder: String read GetRootFolder write SetRootFolder;
@@ -135,6 +136,11 @@ begin
     writeln(lProjectFile, ' is a test file');
   end;
   Result := Self.fProjectList.text;
+end;
+
+procedure TDUnitmTestBuilder.RefreshProjectList;
+begin
+  GetTestProjects;
 end;
 
 procedure TDUnitmTestBuilder.SetRootFolder(const Value: String);
