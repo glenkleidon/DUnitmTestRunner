@@ -11,9 +11,10 @@ uses
   uTestBuilder in 'uTestBuilder.pas',
   uTestBuilder.ProjectInfo in 'uTestBuilder.ProjectInfo.pas',
   DUnitm.Constants in 'DUnitm.Constants.pas',
-  Delphi.Lexer in 'ComponentSource\DelphiLexer\Delphi.Lexer.pas';
+  Delphi.Lexer in 'ComponentSource\DelphiLexer\Delphi.Lexer.pas',
+  uTestBuilder.Scripts in 'uTestBuilder.Scripts.pas';
 
-  var lStartFolder: string;
+var lStartFolder: string;
 begin
   try
     TestBuilderRootFolder := extractFilePath(Paramstr(0));
