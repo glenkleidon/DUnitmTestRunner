@@ -56,9 +56,11 @@ Function DelphiIndexByVersion(AVersion: integer): integer;
 
 function FindDelphiRegKey(ASearchText: string): string;
 Function DelphiRegKeyByDelphiVersion(ADelphiVersion: integer): string;
-Function DelphiRegKeyByBDSVersion(ADelphiVersion: integer): string;
-Function DelphiRegKeyByProductName(ADelphiVersion: integer): string;
-Function DelphiRegKeyByShortName(ADelphiVersion: integer): string;
+Function DelphiRegKeyByBDSVersion(ABDSVersion: integer): string;
+Function DelphiRegKeyByProductName(AProductName: String): string;
+Function DelphiRegKeyByShortName(AShortName: String): string;
+
+var DefaultDelphiVersion : integer;
 
 implementation
 
@@ -275,7 +277,7 @@ end;
 Function DelphiRegKeyByDelphiVersion(ADelphiVersion: integer): string;
 var
   lKey: string;
-  lVersion: string;
+  lVersion: Integer;
 begin
   result := '';
   case ADelphiVersion of
@@ -299,19 +301,70 @@ begin
 
 end;
 
-Function DelphiRegKeyByBDSVersion(ADelphiVersion: integer): string;
+Function DelphiRegKeyByBDSVersion(ABDSVersion: integer): string;
+var
+  lKey: string;
 begin
-
+  result := '';
+  case ABDSVersion of
+    8 .. 11:
+      begin
+        lKey := BORLAND_KEY;
+      end;
+    12:
+      begin
+        lKey := CODEGEAR_KEY;
+      end;
+    13 .. 99:
+      begin
+        lKey := EMBARCADERO_KEY;
+      end;
+  end;
+  result := format(lKey, [ABDSVersion]);
 end;
 
-Function DelphiRegKeyByProductName(ADelphiVersion: integer): string;
+Function DelphiRegKeyByProductName(AProductName: String): string;
 begin
-
+  result := DelphiRegKeyByDelphiVersion(DelphiVersion(AProductName));
 end;
 
-Function DelphiRegKeyByShortName(ADelphiVersion: integer): string;
+Function DelphiRegKeyByShortName(AShortName: String): string;
+var
+  lIndex: integer;
 begin
-
+  result := '';
+  lIndex := DelphiIndexByShortName(AShortName);
+  if lIndex>=0 then
+    result := DelphiRegKeyByDelphiVersion(ALL_DELPHI_VERSIONS[lIndex].DelphiVersion);
 end;
+
+initialization
+{$IFDEF VER80} DefaultDelphiVersion:=1; {$ENDIF}
+{$IFDEF VER90} DefaultDelphiVersion:=2; {$ENDIF}
+{$IFDEF VER100} DefaultDelphiVersion:=3; {$ENDIF}
+{$IFDEF VER120} DefaultDelphiVersion:=4; {$ENDIF}
+{$IFDEF VER130} DefaultDelphiVersion:=5; {$ENDIF}
+{$IFDEF VER140} DefaultDelphiVersion:=6; {$ENDIF}
+{$IFDEF VER150} DefaultDelphiVersion:=7; {$ENDIF}
+{$IFDEF VER160} DefaultDelphiVersion:=8; {$ENDIF}
+{$IFDEF VER170} DefaultDelphiVersion:=9; {$ENDIF}
+{$IFDEF VER180} DefaultDelphiVersion:=10; {$ENDIF}
+{$IFDEF VER180} DefaultDelphiVersion:=11; {$ENDIF}
+{$IFDEF VER185} DefaultDelphiVersion:=11; {$ENDIF}
+{$IFDEF VER200} DefaultDelphiVersion:=12; {$ENDIF}
+{$IFDEF VER210} DefaultDelphiVersion:=14; {$ENDIF}
+{$IFDEF VER220} DefaultDelphiVersion:=15; {$ENDIF}
+{$IFDEF VER230} DefaultDelphiVersion:=16; {$ENDIF}
+{$IFDEF VER240} DefaultDelphiVersion:=17; {$ENDIF}
+{$IFDEF VER250} DefaultDelphiVersion:=18; {$ENDIF}
+{$IFDEF VER260} DefaultDelphiVersion:=19; {$ENDIF}
+{$IFDEF VER270} DefaultDelphiVersion:=20; {$ENDIF}
+{$IFDEF VER280} DefaultDelphiVersion:=21; {$ENDIF}
+{$IFDEF VER290} DefaultDelphiVersion:=22; {$ENDIF}
+{$IFDEF VER300} DefaultDelphiVersion:=23; {$ENDIF}
+{$IFDEF VER310} DefaultDelphiVersion:=24; {$ENDIF}
+{$IFDEF VER320} DefaultDelphiVersion:=25; {$ENDIF}
+
+
 
 end.

@@ -22,7 +22,7 @@ Type
     fRootFolder: string;
     Function GetTestProjects: string;
     function GetProjectList: String;
-    function BuildandRun: TBuildResult;
+    function BuildandRun(ADelphiVersion: string=''): TBuildResult;
     function GetRootFolder: String;
     procedure SetRootFolder(const Value: String);
   public
@@ -46,7 +46,7 @@ function ThisTestRunnerProjectName: string;
 
 implementation
 
-uses RecursiveFolderSearch, uTestBuilder.ProjectInfo;
+uses RecursiveFolderSearch, uTestBuilder.ProjectInfo, uTestBuilder.Scripts;
 
 var
   TestRunnerProjectName: string;
@@ -61,12 +61,28 @@ end;
 
 { TDUnitmTestBuilder }
 
-function TDUnitmTestBuilder.BuildandRun: TBuildResult;
+function TDUnitmTestBuilder.BuildandRun(ADelphiVersion: string=''): TBuildResult;
 var
   lList: TStringList;
+  i: Integer;
+  lProject: string;
+  lDelphiVersion: string;
 begin
   result.Init;
-  GetTestProjects;
+  lList := TStringList.Create;
+  try
+    lList.text := GetTestProjects;
+    for i := 0 to lList.Count - 1 do
+    begin
+     lProject := lList[i];
+     if length(lProject)=0 then continue;
+     writeln(Commandline(lProject, ADelphiVersion));
+    end;
+
+  finally
+    freeandnil(lList);
+  end;
+
 end;
 
 Class function TDUnitmTestBuilder.BuildAndRunTests(AStartFolder: string)
@@ -100,7 +116,8 @@ function TDUnitmTestBuilder.GetProjectList: String;
 begin
   if length(fProjectList.text) = 0 then
     result := GetTestProjects
-  else result := fProjectList.text;
+  else
+    result := fProjectList.text;
 end;
 
 function TDUnitmTestBuilder.GetRootFolder: String;
@@ -112,17 +129,17 @@ end;
 
 function TDUnitmTestBuilder.GetTestProjects: string;
 var
-  I: Integer;
+  i: Integer;
   lProjectFile: string;
   lProjectInfo: TTestProjectInfo;
 begin
   self.fProjectList.text := SearchFolderForFiles('*.dpr', RootFolder);
-  for I := fProjectList.Count - 1 downto 0 do
+  for i := fProjectList.Count - 1 downto 0 do
   begin
-    lProjectFile := fProjectList[I];
+    lProjectFile := fProjectList[i];
     if sametext(lProjectFile, ThisTestRunnerProjectName) then
     begin
-      fProjectList.Delete(I);
+      fProjectList.Delete(i);
       continue;
     end;
 
@@ -130,12 +147,12 @@ begin
     lProjectInfo := GetTestProjectInfo(lProjectFile);
     if not lProjectInfo.IsTestProject then
     begin
-      fProjectList.Delete(I);
+      fProjectList.Delete(i);
       continue;
     end;
     writeln(lProjectFile, ' is a test file');
   end;
-  Result := Self.fProjectList.text;
+  result := self.fProjectList.text;
 end;
 
 procedure TDUnitmTestBuilder.RefreshProjectList;
