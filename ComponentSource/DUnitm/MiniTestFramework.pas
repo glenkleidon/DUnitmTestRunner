@@ -16,7 +16,7 @@ interface
       {$DEFINE HAS_VARUSTRING}
  {$IFEND}
  {$IF CompilerVersion >= 23.0}
-      {$DEFINE HAS_VARUSTRARG}
+      {$DEFINE HAS_VARUSTRING}
  {$IFEND}
 {$ENDIF}
 

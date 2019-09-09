@@ -13,7 +13,8 @@ uses
   DUnitm.Constants in 'DUnitm.Constants.pas',
   Delphi.Lexer in 'ComponentSource\DelphiLexer\Delphi.Lexer.pas',
   uTestBuilder.Scripts in 'uTestBuilder.Scripts.pas',
-  Delphi.Versions in 'ComponentSource\DelphiLexer\Delphi.Versions.pas';
+  Delphi.Versions in 'ComponentSource\DelphiLexer\Delphi.Versions.pas',
+  Delphi.DProj in 'ComponentSource\DelphiLexer\Delphi.DProj.pas';
 
 var lStartFolder: string;
 begin

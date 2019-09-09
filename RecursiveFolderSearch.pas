@@ -2,6 +2,25 @@ unit RecursiveFolderSearch;
 
 interface
 
+{$IFDEF VER120} {$DEFINE BEFOREVARIANTS} {$DEFINE BEFORE_INLINE} {$ENDIF}
+{$IFDEF VER130} {$DEFINE BEFOREVARIANTS} {$DEFINE BEFORE_INLINE} {$ENDIF}
+{$IFNDEF BEFOREVARIANTS}
+ {$IFDEF VER140} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER150} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER160} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER170} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IF CompilerVersion >= 17.0}
+      {$DEFINE HAS_INLINE}
+ {$IFEND}
+ {$IF CompilerVersion >= 20.0}
+      {$DEFINE HAS_VARUSTRING}
+      {$DEFINE HAS_STRINGBUILDER}
+ {$IFEND}
+ {$IF CompilerVersion >= 23.0}
+      {$DEFINE HAS_VARUSTRING}
+ {$IFEND}
+{$ENDIF}
+
 uses SysUtils;
 
 Function SearchFolderForFiles(const AFilter: string; const AStartFolder: String;

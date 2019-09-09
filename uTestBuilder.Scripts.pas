@@ -17,7 +17,14 @@ const
   REG_WIN32 = '\Win32';
   REG_WIN64 = '\Win64';
 
+  PLATFORM_WIN32 = 'Win32';
+  PLATFORM_WIN64 = 'Win64';
+  PLATFORM_OSX32 = 'OSX32';
+
   DELPHI_BIN_PATH = 'bin\';
+  DELPHI_COMPILER_WIN32 = 'dcc32.exe';
+  DELPHI_COMPILER_WIN64 = 'dcc64.exe';
+  DELPHI_COMPILER_OSX32 = '?';
 
 Type
   TDUnitMBuildData = Record
@@ -35,7 +42,7 @@ Type
     ProjectName: string;
     ProjectDir: string;
     Namespaces: string;
-    IsX64: boolean;
+    TargetPlatform: string;
   End;
 
   {
@@ -130,48 +137,70 @@ implementation
 
 uses Registry, Delphi.Versions;
 
-function GetFinalCommandLine(ACommand: string; AProject: TDUnitMBuildData): string;
+function CompilerFromPlatform(APlatform: string): string;
 begin
-  result := Acommand;
-  Result := Stringreplace(Result, '<DCCPATH>', AProject.DCCPath,[rfReplaceAll, rfIgnoreCase]);
-  Result := Stringreplace(Result, '<DCCEXE>', AProject.DCCExe,[rfReplaceAll, rfIgnoreCase]);
+  result := '';
+  if APlatform = PLATFORM_WIN32 then
+    result := DELPHI_COMPILER_WIN32
+  else if APlatform = PLATFORM_WIN64 then
+    result := DELPHI_COMPILER_WIN64
+  else if APlatform = PLATFORM_OSX32 then
+    result := DELPHI_COMPILER_OSX32;
+end;
 
-  if length(AProject.UnitAliases)=0 then
-    Result := Stringreplace(Result, '-A<UNITALIASES>', '',[rfIgnoreCase])
+function GetFinalCommandLine(ACommand: string;
+  AProject: TDUnitMBuildData): string;
+begin
+  result := ACommand;
+  result := Stringreplace(result, '<DCCPATH>', AProject.DCCPath,
+    [rfReplaceAll, rfIgnoreCase]);
+  result := Stringreplace(result, '<DCCEXE>', AProject.DCCExe,
+    [rfReplaceAll, rfIgnoreCase]);
+
+  if length(AProject.UnitAliases) = 0 then
+    result := Stringreplace(result, '-A<UNITALIASES> ', '', [rfIgnoreCase])
   else
-    Result := Stringreplace(Result, '<UNITALIASES>', AProject.UnitAliases,[rfIgnoreCase]);
+    result := Stringreplace(result, '<UNITALIASES>', AProject.UnitAliases,
+      [rfIgnoreCase]);
 
-  if length(AProject.ConditionalDefines)=0 then
-    Result := Stringreplace(Result, '-D<CONDITIONALDEFINES>', '',[rfIgnoreCase])
+  if length(AProject.ConditionalDefines) = 0 then
+    result := Stringreplace(result, '-D<CONDITIONALDEFINES> ', '',
+      [rfIgnoreCase])
   else
-    Result := Stringreplace(Result, '<CONDITIONALDEFINES>', AProject.ConditionalDefines,[rfIgnoreCase]);
+    result := Stringreplace(result, '<CONDITIONALDEFINES>',
+      AProject.ConditionalDefines, [rfIgnoreCase]);
 
-  Result := Stringreplace(Result, '<OUTPUTPATH>', AProject.OutputPath,[rfIgnoreCase]);
-  Result := Stringreplace(Result, '<DCUOUTPUTPATH>', AProject.OutputPath,[rfIgnoreCase]);
+  result := Stringreplace(result, '<OUTPUTPATH>', AProject.OutputPath,
+    [rfIgnoreCase]);
+  result := Stringreplace(result, '<DCUOUTPUTPATH>', AProject.OutputPath,
+    [rfIgnoreCase]);
   if not DirectoryExists(AProject.OutputPath) then
     ForceDirectories(AProject.OutputPath);
   if not DirectoryExists(AProject.DCUOutputPath) then
     ForceDirectories(AProject.DCUOutputPath);
 
-  Result := Stringreplace(Result, '<INCLUDESEARCHPATH>', AProject.UnitSearchPath+';' +
-    AProject.IncludeSearchPath,[rfIgnoreCase]);
+  result := Stringreplace(result, '<INCLUDESEARCHPATH>', AProject.UnitSearchPath
+    + ';' + AProject.IncludeSearchPath, [rfIgnoreCase]);
 
-  Result := Stringreplace(Result, '<OBJECTSEARCHPATH>', AProject.UnitSearchPath+';' +
-    AProject.ObjectSearchPath,[rfIgnoreCase]);
+  result := Stringreplace(result, '<OBJECTSEARCHPATH>', AProject.UnitSearchPath
+    + ';' + AProject.ObjectSearchPath, [rfIgnoreCase]);
 
-  Result := Stringreplace(Result, '<RESOURCESEARCHPATH>', AProject.UnitSearchPath+';' +
-    AProject.ResourceSearchPath,[rfIgnoreCase]);
+  result := Stringreplace(result, '<RESOURCESEARCHPATH>',
+    AProject.UnitSearchPath + ';' + AProject.ResourceSearchPath,
+    [rfIgnoreCase]);
 
-  if length(AProject.Namespaces)=0 then
-    Result := Stringreplace(Result, '-NS<NAMESPACES>', '',[rfIgnoreCase])
+  if length(AProject.Namespaces) = 0 then
+    result := Stringreplace(result, '-NS<NAMESPACES> ', '', [rfIgnoreCase])
   else
-    Result := Stringreplace(Result, '<NAMESPACES>', AProject.Namespaces,[rfIgnoreCase]);
+    result := Stringreplace(result, '<NAMESPACES>', AProject.Namespaces,
+      [rfIgnoreCase]);
 
-  Result := StringReplace(Result, '<PROJECTNAME>', AProject.ProjectName, [rfIgnoreCase]);
+  result := Stringreplace(result, '<PROJECTNAME>', AProject.ProjectName,
+    [rfIgnoreCase]);
 
 end;
 
-Function ProperiesFromRegistry(AProject: TDUnitMBuildData;
+Function PropertiesFromRegistry(AProject: TDUnitMBuildData;
   AVersion: TDelphiVersion): TDUnitMBuildData;
 var
   lRegKey: String;
@@ -180,7 +209,7 @@ var
 begin
   result := AProject;
   lRegKey := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
-  if lRegKey.Length = 0 then
+  if lRegKey.length = 0 then
     raise Exception.Create('Registry Path not found for this version');
   lReg := TRegistry.Create;
   try
@@ -194,8 +223,11 @@ begin
 
     // Library Search Path
     lCurrentKey := lRegKey + REG_LIBRARY;
-    if result.IsX64 then
-      lCurrentKey := lCurrentKey + REG_WIN64
+    if result.TargetPlatform = PLATFORM_WIN64 then
+    begin
+      lCurrentKey := lCurrentKey + REG_WIN64;
+      result.DCCExe := CompilerFromPlatform(result.TargetPlatform);
+    end
     else if AVersion.DelphiVersion > 12 then
       lCurrentKey := lCurrentKey + REG_WIN32;
 
@@ -207,6 +239,40 @@ begin
   end;
 end;
 
+Function PropertiesFromDProj(AProject: TDUnitMBuildData;
+  AVersion: TDelphiVersion): TDUnitMBuildData;
+begin
+
+
+end;
+
+Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
+  : TDUnitMBuildData;
+begin
+
+end;
+
+Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
+  : TDUnitMBuildData;
+begin
+
+end;
+
+Function PropertiesFromProject(AProject: TDUnitMBuildData;
+  AVersion: TDelphiVersion): TDUnitMBuildData;
+begin
+  if AVersion.DelphiVersion < 9 then
+  begin
+    if fileExists(format('%s%s', [AProject.ProjectDir,
+      changefileExt(AProject.ProjectName, '.dof')])) then
+      result := PropertiesFromDOF(AProject, AVersion)
+    else if fileExists(format('%s%s', [AProject.ProjectDir,
+      changefileExt(AProject.ProjectName, '.cfg')])) then
+      result := PropertiesFromCFG(AProject, AVersion);
+  end else
+   result := PropertiesFromDProj(AProject, AVersion);
+end;
+
 Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
 var
   lProject: TDUnitMBuildData;
@@ -214,18 +280,22 @@ var
 begin
   result := '';
   lProject.ProjectDir := extractFilepath(AProjectPath);
-  lProject.ProjectName := ChangeFileExt(AProjectPath, '.dpr');
-  //Default output paths - these may get overridden;
+  lProject.ProjectName := changefileExt(AProjectPath, '.dpr');
+
+  // Default values - these may get overridden;
   lProject.OutputPath := lProject.ProjectDir;
   lProject.DCUOutputPath := lProject.ProjectDir + 'DCU\';
-  if length(ADelphiVersion)=0 then
+  lProject.TargetPlatform := PLATFORM_WIN32;
+  lProject.DCCExe := DELPHI_COMPILER_WIN32;
+
+  if length(ADelphiVersion) = 0 then
     lDelphi := ALL_DELPHI_VERSIONS[DelphiIndexByVersion(DefaultDelphiVersion)]
   else
     lDelphi := FindDelphi(ADelphiVersion);
 
   if lDelphi.DelphiVersion = -1 then
-    raise Exception.Createfmt('Delphi Version % not found', [ADelphiVersion]);
-  lProject := ProperiesFromRegistry(lProject, lDelphi);
+    raise Exception.CreateFmt('Delphi Version % not found', [ADelphiVersion]);
+  lProject := PropertiesFromRegistry(lProject, lDelphi);
   result := GetFinalCommandLine(DEFAULT_DUNITM_BUILD_COMMAND, lProject);
 end;
 

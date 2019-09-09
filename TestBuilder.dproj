@@ -100,6 +100,7 @@
         <DCCReference Include="ComponentSource\DelphiLexer\Delphi.Lexer.pas"/>
         <DCCReference Include="uTestBuilder.Scripts.pas"/>
         <DCCReference Include="ComponentSource\DelphiLexer\Delphi.Versions.pas"/>
+        <DCCReference Include="ComponentSource\DelphiLexer\Delphi.DProj.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

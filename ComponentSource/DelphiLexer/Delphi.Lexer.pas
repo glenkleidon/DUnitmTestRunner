@@ -2,7 +2,7 @@ unit Delphi.Lexer;
 
 interface
 
-uses SysUtils;
+uses SysUtils, StrUtils;
 
 const
   TOKEN_WHITE_SPACE = ' '#9#13#10;
@@ -122,7 +122,7 @@ begin
       end;
       result.isToken := true;
       result.StartPos := lPos;
-      result.EndPos := pos(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP],
+      result.EndPos := posex(TOKEN_COMMENT_BLOCKS[i, TOKEN_COMMENT_STOP],
         AText, lPos);
       case i of
         TOKEN_COMMENT_NAME_INDEX_EOL:
