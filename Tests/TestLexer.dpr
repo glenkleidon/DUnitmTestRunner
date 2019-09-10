@@ -8,9 +8,12 @@ uses
   SysUtils,
   MiniTestFramework,
   TestDelphiLexer in 'TestDelphiLexer.pas',
-  Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas';
+  Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas',
+  TestDelphiDProj in 'TestDelphiDProj.pas',
+  Delphi.DProj in '..\ComponentSource\DelphiLexer\Delphi.DProj.pas';
 
 begin
+
   try
     Title('Unit Test Cases for Delphi Lexer Project');
 
