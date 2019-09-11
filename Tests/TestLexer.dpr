@@ -10,7 +10,8 @@ uses
   TestDelphiLexer in 'TestDelphiLexer.pas',
   Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas',
   TestDelphiDProj in 'TestDelphiDProj.pas',
-  Delphi.DProj in '..\ComponentSource\DelphiLexer\Delphi.DProj.pas';
+  Delphi.DProj in '..\ComponentSource\DelphiLexer\Delphi.DProj.pas',
+  XMLNodeReader in '..\ComponentSource\DelphiLexer\XMLNodeReader.pas';
 
 begin
 

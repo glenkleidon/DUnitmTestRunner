@@ -5,6 +5,7 @@ interface
 uses
   SysUtils,
   minitestframework,
+  XMLNodeReader,
   Delphi.DProj;
 
 const
@@ -178,54 +179,54 @@ begin
 
 end;
 
-procedure XMLChunker_Initialises_as_Expected;
+procedure XMLNodeReader_Initialises_as_Expected;
 var
-  lChunker: IXMLChunker;
+  lNodeReader: IXmlNodeReader;
   lList: TStringlist;
   lFilePath: string;
 begin
-  lChunker := TXMLChunker.Create(RemoveBackTicks(TEST_DATA_DPROJ_2003));
+  lNodeReader := TXmlNodeReader.Create(RemoveBackTicks(TEST_DATA_DPROJ_2003));
 
   newTest('Content is visible');
-  checkisEqual(RemoveBackTicks(TEST_DATA_DPROJ_2003), lChunker.Content);
+  checkisEqual(RemoveBackTicks(TEST_DATA_DPROJ_2003), lNodeReader.Content);
 
   newTest('Position reads as expected');
-  checkisEqual(1, lChunker.Position);
+  checkisEqual(1, lNodeReader.Position);
 
   newTest('Done is correct');
-  checkisFalse(lChunker.Done);
+  checkisFalse(lNodeReader.Done);
 
   newTest('Path is empty');
-  checkistrue(length(lChunker.Path) = 0);
+  checkistrue(length(lNodeReader.Path) = 0);
 
   newTest('Load chuncker from file');
   lList := TStringlist.Create;
-  lFilePath := GetEnvironmentVariable('TEMP') + 'xmlchunkertest.dproj';
+  lFilePath := GetEnvironmentVariable('TEMP') + 'XMLNodeReadertest.dproj';
   deleteFile(lFilePath);
 
   lList := TStringlist.Create;
   try
     lList.Text := TEST_DATA_DPROJ_2003;
     lList.SaveToFile(lFilePath);
-    lChunker := TXMLChunker.CreateFromFile(lFilePath);
+    lNodeReader := TXmlNodeReader.CreateFromFile(lFilePath);
   finally
     freeandnil(lList);
     deleteFile(lFilePath);
   end;
   newTest('File Content is visible');
-  checkisEqual(TEST_DATA_DPROJ_2003 + #13#10, lChunker.Content);
+  checkisEqual(TEST_DATA_DPROJ_2003 + #13#10, lNodeReader.Content);
 
 end;
 
-Procedure XMLChunker_NextNode_Works_as_Expected;
+Procedure XMLNodeReader_NextNode_Works_as_Expected;
 var
-  lChunker: IXMLChunker;
+  lNodeReader: IXmlNodeReader;
   lNode: TXMLNode;
 begin
-  lChunker := TXMLChunker.Create(RemoveBackTicks(TEST_DATA_DPROJ_2003));
+  lNodeReader := TXmlNodeReader.Create(RemoveBackTicks(TEST_DATA_DPROJ_2003));
 
   newTest('Get First Node');
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode;
   // <Project ...
   newTest('Node Path');
   checkisEqual('/Project', lNode.Path);
@@ -241,41 +242,41 @@ begin
   checkisEqual('http://schemas.microsoft.com/developer/msbuild/2003',
     lNode.Attributes[0].Value);
   newTest('Updated Path');
-  checkisEqual('/Project', lChunker.Path);
+  checkisEqual('/Project', lNodeReader.Path);
 
   // <PropertyGroup>
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode;
   newTest('Property Group returns empty with no attributes');
   checkisEqual('/Project/PropertyGroup', lNode.Path);
   checkisEqual('PropertyGroup', lNode.Name);
   checkisEqual('', lNode.Value);
   checkisEqual(0, length(lNode.Attributes));
-  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+  checkisEqual('/Project/PropertyGroup', lNodeReader.Path);
 
   // <ProjectGuid>
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode;
   newTest('Project Guid returns with a value but no attributes');
   checkisEqual('/Project/PropertyGroup/ProjectGuid', lNode.Path);
   checkisEqual('ProjectGuid', lNode.Name);
   checkisEqual('{E1C2E563-4870-44D1-9394-BAE6D5485E96}', lNode.Value);
   checkisEqual(0, length(lNode.Attributes));
   newTest('Project GUID closes - Path shrinks back by one node');
-  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+  checkisEqual('/Project/PropertyGroup', lNodeReader.Path);
 
   // <ProjectVersion>
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode;
   newTest('Project Guid returns with a value but no attributes');
   checkisEqual('/Project/PropertyGroup/ProjectVersion', lNode.Path);
   checkisEqual('ProjectVersion', lNode.Name);
   checkisEqual('16.1', lNode.Value);
   checkisEqual(0, length(lNode.Attributes));
   newTest('Project GUID closes - Path shrinks back by one node');
-  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+  checkisEqual('/Project/PropertyGroup', lNodeReader.Path);
 
   newTest('Iterate over nodes until we reach the end of this node');
-  while (lNode.Name <> 'AppType') and (not lChunker.Done) do
-    lNode := lChunker.NextNode;
-  lNode := lChunker.NextNode;
+  while (lNode.Name <> 'AppType') and (not lNodeReader.Done) do
+    lNode := lNodeReader.NextNode;
+  lNode := lNodeReader.NextNode;
   checkisEqual('/Project/PropertyGroup', lNode.Path);
   checkisEqual(1, length(lNode.Attributes));
   checkisEqual('PropertyGroup', lNode.Name);
@@ -284,17 +285,22 @@ begin
     lNode.Attributes[0].Value);
 
   newTest('Handle Self closed nodes in the form <xyz/>');
-  lNode := lChunker.NextNode; // Base
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode; // Base
+  lNode := lNodeReader.NextNode;
   checkIsEqual('Empty',lNode.Name);
   checkIsEqual(0,length(lNode.attributes));
   checkisEqual('',lNode.Value);
 
   newTest('Handle Self closed nodes in the form <xyz />');
-  lNode := lChunker.NextNode;
+  lNode := lNodeReader.NextNode;
   checkIsEqual('Empty2',lNode.Name);
   checkIsEqual(0,length(lNode.attributes));
   checkisEqual('',lNode.Value);
+
+end;
+
+Procedure msBuild_condition_logic_works_as_expected;
+begin
 
 end;
 
@@ -307,9 +313,11 @@ PrepareSet(Prepare);
 AddTestCase('Test Strip White Space', StripWhiteSpace_Works_as_expected);
 AddTestCase('Test Reset XML Node', ResetXMLNode_Works_as_expected);
 AddTestCase('Test GetXMLAttributes', GetXMLAttributes_Works_as_Expected);
-AddTestCase('Test XML Chunker Class', XMLChunker_Initialises_as_Expected);
+AddTestCase('Test XML Chunker Class', XMLNodeReader_Initialises_as_Expected);
 AddTestCase('Test XML Chunker Next Node',
-  XMLChunker_NextNode_Works_as_Expected);
+  XMLNodeReader_NextNode_Works_as_Expected);
+AddTestCase('Test MSBuild Condition Logic',
+  msBuild_condition_logic_works_as_expected);
 
 FinaliseSet(Finalise);
 
