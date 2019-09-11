@@ -322,7 +322,7 @@ begin
   checkIsEqual('Base', lConditions[0].SecondArgument);
   checkIsEqual('0.0', lConditions[0].Group);
 
-  checkIsEqual('.0', lConditions[1].FirstArgument);
+  checkIsEqual('0.0', lConditions[1].FirstArgument);
   checkIsEqual(coOr, lConditions[1].ConditionalOperator);
   checkIsEqual('', lConditions[1].SecondArgument);
   checkIsEqual('0.0', lConditions[1].Group);
@@ -343,7 +343,7 @@ begin
   checkIsEqual('1.1', lConditions[0].Group);
 
   NewTest('Expression 1 is And');
-  checkIsEqual('.1', lConditions[1].FirstArgument);
+  checkIsEqual('1.1', lConditions[1].FirstArgument);
   checkIsEqual(coAnd, lConditions[1].ConditionalOperator);
   checkIsEqual('', lConditions[1].SecondArgument);
   checkIsEqual('1.1', lConditions[1].Group);
