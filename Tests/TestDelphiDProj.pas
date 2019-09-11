@@ -22,9 +22,7 @@ const
     '      <TargetedPlatforms>3</TargetedPlatforms>' +
     '      <AppType>Console</AppType>' + '  </PropertyGroup>' +
     '  <PropertyGroup Condition="`$(Config)`==`Base` or `$(Base)`!=``">' +
-    '      <Base>true</Base>' +
-    '      <Empty/>' +
-    '      <Empty2 />' +
+    '      <Base>true</Base>' + '      <Empty/>' + '      <Empty2 />' +
     '  </PropertyGroup>' + '</Project>';
 
 implementation
@@ -287,28 +285,40 @@ begin
   newTest('Handle Self closed nodes in the form <xyz/>');
   lNode := lNodeReader.NextNode; // Base
   lNode := lNodeReader.NextNode;
-  checkIsEqual('Empty',lNode.Name);
-  checkIsEqual(0,length(lNode.attributes));
-  checkisEqual('',lNode.Value);
+  checkisEqual('Empty', lNode.Name);
+  checkisEqual(0, length(lNode.Attributes));
+  checkisEqual('', lNode.Value);
 
   newTest('Handle Self closed nodes in the form <xyz />');
   lNode := lNodeReader.NextNode;
-  checkIsEqual('Empty2',lNode.Name);
-  checkIsEqual(0,length(lNode.attributes));
-  checkisEqual('',lNode.Value);
+  checkisEqual('Empty2', lNode.Name);
+  checkisEqual(0, length(lNode.Attributes));
+  checkisEqual('', lNode.Value);
 
 end;
 
-Procedure msBuild_condition_logic_works_as_expected;
+Procedure Simple_Conditions_Parse_Correctly;
+var
+  lConditions: TProjectConditions;
 begin
+  newTest('Empty Condition returns empty set');
+  lConditions := ParseCondition('');
+  checkIsEqual(0, length(lConditions));
+
+  NewTest('Single Condition');
+  lConditions := ParseCondition(RemoveBackTicks('`$(Config)`==`Base`'));
+  checkIsEqual(1, length(lConditions));
+  checkIsEqual('$(Config)', lConditions[0].FirstArgument);
+  checkIsEqual(coEquals, lConditions[0].ConditionalOperator);
+  checkIsEqual('Base', lConditions[0].SecondArgument);
+  checkIsEqual('', lConditions[0].Group);
 
 end;
 
 initialization
 
-NewSet('Delphi DPROJ Parser');
-
-PrepareSet(Prepare);
+NewSet('XML Node Reader');
+PrepareSet(Nil);
 // Comments
 AddTestCase('Test Strip White Space', StripWhiteSpace_Works_as_expected);
 AddTestCase('Test Reset XML Node', ResetXMLNode_Works_as_expected);
@@ -316,9 +326,11 @@ AddTestCase('Test GetXMLAttributes', GetXMLAttributes_Works_as_Expected);
 AddTestCase('Test XML Chunker Class', XMLNodeReader_Initialises_as_Expected);
 AddTestCase('Test XML Chunker Next Node',
   XMLNodeReader_NextNode_Works_as_Expected);
-AddTestCase('Test MSBuild Condition Logic',
-  msBuild_condition_logic_works_as_expected);
+FinaliseSet(Nil);
 
+NewSet('MSBuild Condition Logic');
+PrepareSet(Prepare);
+AddTestCase('Test Parse Simple Conditions', Simple_Conditions_Parse_Correctly);
 FinaliseSet(Finalise);
 
 finalization
