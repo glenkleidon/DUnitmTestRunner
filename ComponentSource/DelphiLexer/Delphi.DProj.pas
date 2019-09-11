@@ -47,7 +47,7 @@ var
 
   procedure AddArgument;
   var
-    s: integer;
+    p, s: integer;
     lOperator: TConditionOperator;
   begin
     s := length(result);
@@ -76,15 +76,22 @@ var
           else if sameText(trim(lValue), 'and') then
             lOperator := coAnd;
 
-          if lOperator<>coNone then
+          if lOperator <> coNone then
           begin
             setlength(result, s + 1);
             result[s].Group := lGroupName;
-            result[s].FirstArgument := '.' + inttoStr(lGroupIndex - 1);
+            if result[s].Group = result[s - 1].Group then
+              result[s].FirstArgument := result[s].Group
+            else
+            begin
+              p := LastDelimiter('.', result[s - 1].Group);
+              result[s].FirstArgument := '.' + copy(result[s - 1].Group,
+                1, p - 1);
+            end;
             result[s].ConditionalOperator := lOperator;
             inc(lGroupIndex);
           end;
-          lConditionIndex := -1;
+          lConditionIndex := 0;
         end;
     end;
     lValue := '';
@@ -104,6 +111,7 @@ begin
   lGroupIndex := 0;
   lConditionIndex := 0;
   lValue := '';
+  SetGroupName;
   for i := 1 to l do
   begin
     c := ACondition[i];
@@ -145,7 +153,6 @@ begin
     end;
     lValue := lValue + c;
   end;
-
 
 end;
 
