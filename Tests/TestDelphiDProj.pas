@@ -21,7 +21,10 @@ const
     '      <TargetedPlatforms>3</TargetedPlatforms>' +
     '      <AppType>Console</AppType>' + '  </PropertyGroup>' +
     '  <PropertyGroup Condition="`$(Config)`==`Base` or `$(Base)`!=``">' +
-    '      <Base>true</Base>' + '  </PropertyGroup>' + '</Project>';
+    '      <Base>true</Base>' +
+    '      <Empty/>' +
+    '      <Empty2 />' +
+    '  </PropertyGroup>' + '</Project>';
 
 implementation
 
@@ -210,7 +213,7 @@ begin
     deleteFile(lFilePath);
   end;
   newTest('File Content is visible');
-  checkisEqual(TEST_DATA_DPROJ_2003+#13#10, lChunker.Content);
+  checkisEqual(TEST_DATA_DPROJ_2003 + #13#10, lChunker.Content);
 
 end;
 
@@ -221,13 +224,13 @@ var
 begin
   lChunker := TXMLChunker.Create(RemoveBackTicks(TEST_DATA_DPROJ_2003));
 
-  newtest('Get First Node');
+  newTest('Get First Node');
   lNode := lChunker.NextNode;
-
+  // <Project ...
   newTest('Node Path');
-  checkisEqual('Project',lNode.Path);
+  checkisEqual('/Project', lNode.Path);
   newTest('Node Name');
-  checkisEqual('Project',lNode.Name);
+  checkisEqual('Project', lNode.Name);
   newTest('Node Value');
   checkisEqual('', lNode.Value);
   newTest('Attribute Count');
@@ -235,7 +238,63 @@ begin
   newTest('Attribute Name');
   checkisEqual('xmlns', lNode.Attributes[0].Name);
   newTest('Attribute Value');
-  checkisEqual('http://schemas.microsoft.com/developer/msbuild/2003', lNode.Attributes[0].value);
+  checkisEqual('http://schemas.microsoft.com/developer/msbuild/2003',
+    lNode.Attributes[0].Value);
+  newTest('Updated Path');
+  checkisEqual('/Project', lChunker.Path);
+
+  // <PropertyGroup>
+  lNode := lChunker.NextNode;
+  newTest('Property Group returns empty with no attributes');
+  checkisEqual('/Project/PropertyGroup', lNode.Path);
+  checkisEqual('PropertyGroup', lNode.Name);
+  checkisEqual('', lNode.Value);
+  checkisEqual(0, length(lNode.Attributes));
+  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+
+  // <ProjectGuid>
+  lNode := lChunker.NextNode;
+  newTest('Project Guid returns with a value but no attributes');
+  checkisEqual('/Project/PropertyGroup/ProjectGuid', lNode.Path);
+  checkisEqual('ProjectGuid', lNode.Name);
+  checkisEqual('{E1C2E563-4870-44D1-9394-BAE6D5485E96}', lNode.Value);
+  checkisEqual(0, length(lNode.Attributes));
+  newTest('Project GUID closes - Path shrinks back by one node');
+  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+
+  // <ProjectVersion>
+  lNode := lChunker.NextNode;
+  newTest('Project Guid returns with a value but no attributes');
+  checkisEqual('/Project/PropertyGroup/ProjectVersion', lNode.Path);
+  checkisEqual('ProjectVersion', lNode.Name);
+  checkisEqual('16.1', lNode.Value);
+  checkisEqual(0, length(lNode.Attributes));
+  newTest('Project GUID closes - Path shrinks back by one node');
+  checkisEqual('/Project/PropertyGroup', lChunker.Path);
+
+  newTest('Iterate over nodes until we reach the end of this node');
+  while (lNode.Name <> 'AppType') and (not lChunker.Done) do
+    lNode := lChunker.NextNode;
+  lNode := lChunker.NextNode;
+  checkisEqual('/Project/PropertyGroup', lNode.Path);
+  checkisEqual(1, length(lNode.Attributes));
+  checkisEqual('PropertyGroup', lNode.Name);
+  checkisEqual(DPROJ_CONDITION_ATTRIBUTE, lNode.Attributes[0].Name);
+  checkisEqual(RemoveBackTicks('`$(Config)`==`Base` or `$(Base)`!=``'),
+    lNode.Attributes[0].Value);
+
+  newTest('Handle Self closed nodes in the form <xyz/>');
+  lNode := lChunker.NextNode; // Base
+  lNode := lChunker.NextNode;
+  checkIsEqual('Empty',lNode.Name);
+  checkIsEqual(0,length(lNode.attributes));
+  checkisEqual('',lNode.Value);
+
+  newTest('Handle Self closed nodes in the form <xyz />');
+  lNode := lChunker.NextNode;
+  checkIsEqual('Empty2',lNode.Name);
+  checkIsEqual(0,length(lNode.attributes));
+  checkisEqual('',lNode.Value);
 
 end;
 
@@ -249,7 +308,8 @@ AddTestCase('Test Strip White Space', StripWhiteSpace_Works_as_expected);
 AddTestCase('Test Reset XML Node', ResetXMLNode_Works_as_expected);
 AddTestCase('Test GetXMLAttributes', GetXMLAttributes_Works_as_Expected);
 AddTestCase('Test XML Chunker Class', XMLChunker_Initialises_as_Expected);
-AddTestCase('Test XML CHunker Next Node', XMLChunker_NextNode_Works_as_Expected);
+AddTestCase('Test XML Chunker Next Node',
+  XMLChunker_NextNode_Works_as_Expected);
 
 FinaliseSet(Finalise);
 
