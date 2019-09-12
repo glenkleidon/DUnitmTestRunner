@@ -25,6 +25,8 @@ type
     fProperties: TStringlist;
     function GetProperties: TStrings;
     procedure DoExtraction(ANodeReader: IXMLNodeReader);
+    function ConditionIndex(ANode: TXMLNode): Integer;
+    function ConditionIsMet(ACondition: String): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -39,7 +41,7 @@ implementation
 
 function ParseCondition(ACondition: string): TProjectConditions;
 var
-  l, i, lGroupDepth, lGroupIndex, lConditionIndex: integer;
+  l, i, lGroupDepth, lGroupIndex, lConditionIndex: Integer;
   c: char;
   lInQuote: boolean;
   lValue: string;
@@ -47,7 +49,7 @@ var
 
   procedure AddArgument;
   var
-    p, s: integer;
+    p, s: Integer;
     lOperator: TConditionOperator;
   begin
     s := length(result);
@@ -158,6 +160,12 @@ end;
 
 { TDelphiProjectProperties }
 
+function TDelphiProjectProperties.ConditionIsMet(ACondition: String): boolean;
+begin
+  result := false;
+
+end;
+
 constructor TDelphiProjectProperties.Create;
 begin
   self.fProperties := TStringlist.Create;
@@ -170,8 +178,19 @@ begin
 end;
 
 procedure TDelphiProjectProperties.DoExtraction(ANodeReader: IXMLNodeReader);
+var
+  lNode: TXMLNode;
+  lCondition: TXMLAttribute;
+  lIndex: integer;
 begin
-
+  while not ANodeReader.Done do
+  begin
+    lNode := ANodeReader.NextNode;
+    lIndex := ConditionIndex(lNode);
+    if (lIndex=0) or ConditionIsMet(lNode.Attributes[lIndex].Value) then
+    begin
+    end;
+  end;
 end;
 
 procedure TDelphiProjectProperties.ExtractProperties(AText: string);
@@ -188,6 +207,20 @@ end;
 function TDelphiProjectProperties.GetProperties: TStrings;
 begin
   result := TStrings(self.fProperties);
+end;
+
+function TDelphiProjectProperties.ConditionIndex(ANode: TXMLNode): Integer;
+var
+  i, lMaxAttribute: Integer;
+begin
+  result := -1;
+  lMaxAttribute := length(ANode.Attributes) - 1;
+  for i := 0 to lMaxAttribute do
+    if sameText(ANode.Attributes[i].Name, DPROJ_CONDITION_ATTRIBUTE) then
+    begin
+      result := i;
+      exit;
+    end;
 end;
 
 end.

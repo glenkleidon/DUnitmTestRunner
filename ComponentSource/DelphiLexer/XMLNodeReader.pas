@@ -9,6 +9,7 @@ const
   XML_WHITESPACE = ' '#9#13#10#11#12;
 
   XML_ATTRIBUTE_COMMENT_NAME = 'Comment';
+
 Type
   TXMLAttribute = Record
     Name: string;
@@ -61,9 +62,14 @@ Type
 function StripWhiteSpace(AText: string): string;
 function ResetXMLNode: TXMLNode;
 function GetXMLAttributes(AText: string): TXMLAttributes;
-
+/// <summary>
+/// Return the depth of an XML Path.
+/// Eg '' = 0; '/' = 1; '/XML/Path' = 2;
+/// </summary>
+function PathDepth(AXMLPath: string): integer;
 
 implementation
+
 function ResetXMLNode: TXMLNode;
 begin
   result.Path := '';
@@ -130,6 +136,27 @@ begin
     pText := @AText[b];
     Done := b >= length(AText);
   until Done;
+end;
+
+function PathDepth(AXMLPath: string): integer;
+var
+  p,l,b: integer;
+  pPath: PChar;
+begin
+  result := -1;
+  l := length(AXMLPath);
+  p := pos('/',AXMLPath);
+  if p=0 then exit;
+  Result := 0;
+  b := 0;
+  while (p>0) and (b<l) do
+  begin
+    if (b+p)<l then inc(result);
+    inc(b,p);
+    pPath := @AXMLPath[b+1];
+    p := pos('/', pPath);
+  end;
+
 end;
 
 { TXmlNodeReader }
@@ -254,13 +281,13 @@ begin
   if r = 0 then
   begin
     result.Name := lOpen;
-    //check for an empty node.
-    if copy(result.name,length(Result.name),1)='/' then
+    // check for an empty node.
+    if copy(result.Name, length(result.Name), 1) = '/' then
     begin
-       // fix the name
-       result.Name := copy(Result.Name, 1, length(Result.name)-1);
-       result.path := self.Path + '/' + Result.Name;
-       exit;
+      // fix the name
+      result.Name := copy(result.Name, 1, length(result.Name) - 1);
+      result.Path := self.Path + '/' + result.Name;
+      exit;
     end;
   end
   else
@@ -268,7 +295,8 @@ begin
     result.Name := copy(lOpen, 1, r - 1);
     lAttributes := copy(lOpen, r + 1, MAXINT);
     // Check for Empty node.
-    if StripWhiteSpace(lAttributes)='/' then exit;
+    if StripWhiteSpace(lAttributes) = '/' then
+      exit;
     result.Attributes := GetXMLAttributes(lAttributes);
   end;
   self.fPath := self.Path + '/' + result.Name;
@@ -296,6 +324,5 @@ begin
   self.fContent := '';
   self.fPath := '';
 end;
-
 
 end.

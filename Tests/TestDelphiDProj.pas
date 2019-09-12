@@ -368,6 +368,39 @@ begin
 
 end;
 
+Procedure PathDepth_Works_As_Expected;
+begin
+  NewTest('Empty string returns -1');
+  checkisEqual(-1,PathDepth(''));
+
+  NewTest('Non empty string without / returns -1');
+  checkIsEqual(-1, PathDepth('string without a slash in it'));
+
+  NewTest('Single / returns 0');
+  checkIsEqual(0, PathDepth('/'));
+
+  NewTest('Single / with text returns 1');
+  checkIsEqual(1, PathDepth('/Text'));
+
+  NewTest('Text with 2 / and no extra text returns 1');
+  checkIsEqual(1, PathDepth('/Text/'));
+
+  NewTest('Text with 2 / and trailing text returns 2');
+  checkIsEqual(2, PathDepth('/Text/Text2'));
+
+  NewTest('Text with 3 / and no extra text returns 2');
+  checkIsEqual(2, PathDepth('/Text/Text2/'));
+
+  NewTest('Text with 3 / and trailing text returns 3');
+  checkIsEqual(3, PathDepth('/Text/Text2/Text3'));
+
+
+  NewTest('Text with 7 / and trailing text returns 7');
+  checkIsEqual(7, PathDepth('/Text/Text2/Text3/Text4/Text5/Text6/Text7'));
+
+
+end;
+
 initialization
 
 NewSet('XML Node Reader');
@@ -377,6 +410,7 @@ AddTestCase('Test Strip White Space', StripWhiteSpace_Works_as_expected);
 AddTestCase('Test Reset XML Node', ResetXMLNode_Works_as_expected);
 AddTestCase('Test GetXMLAttributes', GetXMLAttributes_Works_as_Expected);
 AddTestCase('Test XML Chunker Class', XMLNodeReader_Initialises_as_Expected);
+AddTestCase('Test PathDepth', PathDepth_works_as_expected);
 AddTestCase('Test XML Chunker Next Node',
   XMLNodeReader_NextNode_Works_as_Expected);
 FinaliseSet(Nil);
