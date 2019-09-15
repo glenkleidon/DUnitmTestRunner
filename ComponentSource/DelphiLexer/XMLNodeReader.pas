@@ -56,6 +56,7 @@ Type
     procedure Reset;
     constructor CreateFromFile(AFilename: string); overload;
     constructor Create(AText: string = ''); overload;
+    destructor Destroy; override;
     function NextNode: TXMLNode;
   End;
 
@@ -177,6 +178,16 @@ begin
     raise Exception.Createfmt('File %s does not exist', [AFilename]);
   self.Reset;
   self.LoadFromFile(AFilename);
+end;
+
+destructor TXmlNodeReader.Destroy;
+begin
+  // this destructor is actually unnecessary, but it helps to
+  // prove that the destructor is being called when you expect.
+  self.fPosition := 0;
+  self.fContent := '';
+  self.fPath := '';
+  inherited;
 end;
 
 function TXmlNodeReader.GetContent: string;

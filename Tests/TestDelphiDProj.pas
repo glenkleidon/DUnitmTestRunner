@@ -23,7 +23,19 @@ const
     '      <AppType>Console</AppType>' + '  </PropertyGroup>' +
     '  <PropertyGroup Condition="`$(Config)`==`Base` or `$(Base)`!=``">' +
     '      <Base>true</Base>' + '      <Empty/>' + '      <Empty2 />' +
-    '  </PropertyGroup>' + '</Project>';
+    '  </PropertyGroup>' +
+    '  <ProjectExtensions>'+
+    '    <Borland.Personality>Delphi.Personality.12</Borland.Personality>'+
+    '    <Borland.ProjectType>Application</Borland.ProjectType>'+
+    '    <BorlandProject>'+
+    '        <Delphi.Personality>'+
+    '            <Source>'+
+    '                <Source Name="MainSource">TestRunnerTests.dpr</Source>'+
+    '            </Source>'+
+    '        </Delphi.Personality>'+
+    '    </BorlandProject>'+
+    '  </ProjectExtensions>'+
+     '</Project>';
 
 implementation
 
@@ -303,101 +315,131 @@ var
 begin
   newTest('Empty Condition returns empty set');
   lConditions := ParseCondition('');
-  checkIsEqual(0, length(lConditions));
+  checkisEqual(0, length(lConditions));
 
-  NewTest('Single Condition');
+  newTest('Single Condition');
   lConditions := ParseCondition(RemoveBackTicks('`$(Config)`==`Base`'));
-  checkIsEqual(1, length(lConditions));
-  checkIsEqual('$(Config)', lConditions[0].FirstArgument);
-  checkIsEqual(coEquals, lConditions[0].ConditionalOperator);
-  checkIsEqual('Base', lConditions[0].SecondArgument);
-  checkIsEqual('0.0', lConditions[0].Group);
+  checkisEqual(1, length(lConditions));
+  checkisEqual('$(Config)', lConditions[0].FirstArgument);
+  checkisEqual(coEquals, lConditions[0].ConditionalOperator);
+  checkisEqual('Base', lConditions[0].SecondArgument);
+  checkisEqual('0.0', lConditions[0].Group);
 
+  newTest('Two conditions OR at the same level');
+  lConditions := ParseCondition
+    (RemoveBackTicks('`$(Config)`==`Base` or `$(Base)`!=``'));
+  checkisEqual(3, length(lConditions));
+  checkisEqual('$(Config)', lConditions[0].FirstArgument);
+  checkisEqual(coEquals, lConditions[0].ConditionalOperator);
+  checkisEqual('Base', lConditions[0].SecondArgument);
+  checkisEqual('0.0', lConditions[0].Group);
 
-  NewTest('Two conditions OR at the same level');
-  lConditions := ParseCondition(RemoveBackTicks('`$(Config)`==`Base` or `$(Base)`!=``'));
-  checkIsEqual(3, length(lConditions));
-  checkIsEqual('$(Config)', lConditions[0].FirstArgument);
-  checkIsEqual(coEquals, lConditions[0].ConditionalOperator);
-  checkIsEqual('Base', lConditions[0].SecondArgument);
-  checkIsEqual('0.0', lConditions[0].Group);
+  checkisEqual('0.0', lConditions[1].FirstArgument);
+  checkisEqual(coOr, lConditions[1].ConditionalOperator);
+  checkisEqual('', lConditions[1].SecondArgument);
+  checkisEqual('0.0', lConditions[1].Group);
 
-  checkIsEqual('0.0', lConditions[1].FirstArgument);
-  checkIsEqual(coOr, lConditions[1].ConditionalOperator);
-  checkIsEqual('', lConditions[1].SecondArgument);
-  checkIsEqual('0.0', lConditions[1].Group);
+  checkisEqual('$(Base)', lConditions[2].FirstArgument);
+  checkisEqual(coNotEquals, lConditions[2].ConditionalOperator);
+  checkisEqual('', lConditions[2].SecondArgument);
+  checkisEqual('0.0', lConditions[2].Group);
 
-  checkIsEqual('$(Base)', lConditions[2].FirstArgument);
-  checkIsEqual(coNotEquals, lConditions[2].ConditionalOperator);
-  checkIsEqual('', lConditions[2].SecondArgument);
-  checkIsEqual('0.0', lConditions[2].Group);
+  newTest('3 conditions First 2 and and Or''ed with last');
+  lConditions := ParseCondition
+    (RemoveBackTicks
+    ('(`$(Platform)`==`Win32` and `$(Base)`==`true`) or `$(Base_Win32)`!=``'));
+  checkisEqual(5, length(lConditions));
+  newTest('Expression 0 is platform');
+  checkisEqual('$(Platform)', lConditions[0].FirstArgument);
+  checkisEqual(coEquals, lConditions[0].ConditionalOperator);
+  checkisEqual('Win32', lConditions[0].SecondArgument);
+  checkisEqual('1.1', lConditions[0].Group);
 
+  newTest('Expression 1 is And');
+  checkisEqual('1.1', lConditions[1].FirstArgument);
+  checkisEqual(coAnd, lConditions[1].ConditionalOperator);
+  checkisEqual('', lConditions[1].SecondArgument);
+  checkisEqual('1.1', lConditions[1].Group);
 
-  NewTest('3 conditions First 2 and and Or''ed with last');
-  lConditions := ParseCondition(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==`true`) or `$(Base_Win32)`!=``'));
-  checkIsEqual(5, length(lConditions));
-  NewTest('Expression 0 is platform');
-  checkIsEqual('$(Platform)', lConditions[0].FirstArgument);
-  checkIsEqual(coEquals, lConditions[0].ConditionalOperator);
-  checkIsEqual('Win32', lConditions[0].SecondArgument);
-  checkIsEqual('1.1', lConditions[0].Group);
+  newTest('Expression 2 is Base');
+  checkisEqual('$(Base)', lConditions[2].FirstArgument);
+  checkisEqual(coEquals, lConditions[2].ConditionalOperator);
+  checkisEqual('true', lConditions[2].SecondArgument);
+  checkisEqual('1.1', lConditions[2].Group);
 
-  NewTest('Expression 1 is And');
-  checkIsEqual('1.1', lConditions[1].FirstArgument);
-  checkIsEqual(coAnd, lConditions[1].ConditionalOperator);
-  checkIsEqual('', lConditions[1].SecondArgument);
-  checkIsEqual('1.1', lConditions[1].Group);
+  newTest('Expression 3 is OR');
+  checkisEqual('.1', lConditions[3].FirstArgument);
+  checkisEqual(coOr, lConditions[3].ConditionalOperator);
+  checkisEqual('', lConditions[3].SecondArgument);
+  checkisEqual('2.0', lConditions[3].Group);
 
-  NewTest('Expression 2 is Base');
-  checkIsEqual('$(Base)', lConditions[2].FirstArgument);
-  checkIsEqual(coEquals, lConditions[2].ConditionalOperator);
-  checkIsEqual('true', lConditions[2].SecondArgument);
-  checkIsEqual('1.1', lConditions[2].Group);
-
-  NewTest('Expression 3 is OR');
-  checkIsEqual('.1', lConditions[3].FirstArgument);
-  checkIsEqual(coOr, lConditions[3].ConditionalOperator);
-  checkIsEqual('', lConditions[3].SecondArgument);
-  checkIsEqual('2.0', lConditions[3].Group);
-
-  NewTest('Expression 4 is Base_Win32');
-  checkIsEqual('$(Base_Win32)', lConditions[4].FirstArgument);
-  checkIsEqual(coNotEquals, lConditions[4].ConditionalOperator);
-  checkIsEqual('', lConditions[4].SecondArgument);
-  checkIsEqual('2.0', lConditions[4].Group);
+  newTest('Expression 4 is Base_Win32');
+  checkisEqual('$(Base_Win32)', lConditions[4].FirstArgument);
+  checkisEqual(coNotEquals, lConditions[4].ConditionalOperator);
+  checkisEqual('', lConditions[4].SecondArgument);
+  checkisEqual('2.0', lConditions[4].Group);
 
 end;
 
 Procedure PathDepth_Works_As_Expected;
 begin
-  NewTest('Empty string returns -1');
-  checkisEqual(-1,PathDepth(''));
+  newTest('Empty string returns -1');
+  checkisEqual(-1, PathDepth(''));
 
-  NewTest('Non empty string without / returns -1');
-  checkIsEqual(-1, PathDepth('string without a slash in it'));
+  newTest('Non empty string without / returns -1');
+  checkisEqual(-1, PathDepth('string without a slash in it'));
 
-  NewTest('Single / returns 0');
-  checkIsEqual(0, PathDepth('/'));
+  newTest('Single / returns 0');
+  checkisEqual(0, PathDepth('/'));
 
-  NewTest('Single / with text returns 1');
-  checkIsEqual(1, PathDepth('/Text'));
+  newTest('Single / with text returns 1');
+  checkisEqual(1, PathDepth('/Text'));
 
-  NewTest('Text with 2 / and no extra text returns 1');
-  checkIsEqual(1, PathDepth('/Text/'));
+  newTest('Text with 2 / and no extra text returns 1');
+  checkisEqual(1, PathDepth('/Text/'));
 
-  NewTest('Text with 2 / and trailing text returns 2');
-  checkIsEqual(2, PathDepth('/Text/Text2'));
+  newTest('Text with 2 / and trailing text returns 2');
+  checkisEqual(2, PathDepth('/Text/Text2'));
 
-  NewTest('Text with 3 / and no extra text returns 2');
-  checkIsEqual(2, PathDepth('/Text/Text2/'));
+  newTest('Text with 3 / and no extra text returns 2');
+  checkisEqual(2, PathDepth('/Text/Text2/'));
 
-  NewTest('Text with 3 / and trailing text returns 3');
-  checkIsEqual(3, PathDepth('/Text/Text2/Text3'));
+  newTest('Text with 3 / and trailing text returns 3');
+  checkisEqual(3, PathDepth('/Text/Text2/Text3'));
 
+  newTest('Text with 7 / and trailing text returns 7');
+  checkisEqual(7, PathDepth('/Text/Text2/Text3/Text4/Text5/Text6/Text7'));
 
-  NewTest('Text with 7 / and trailing text returns 7');
-  checkIsEqual(7, PathDepth('/Text/Text2/Text3/Text4/Text5/Text6/Text7'));
+end;
 
+Procedure ConditionsAreMet_Works_Crrectly;
+begin
+  notImplemented;
+end;
+
+Procedure Properties_are_set_as_expected;
+var
+  lProject: IDelphiProjectProperties;
+begin
+  lProject := TDelphiProjectProperties.Create;
+
+  lProject.ExtractProperties(TEST_DATA_DPROJ_2003);
+  newTest('Properties have been extract');
+  CheckIsTrue(lProject.Properties.Count>0);
+
+  newTest('Unconditional Properties are populated');
+  checkisEqual('{E1C2E563-4870-44D1-9394-BAE6D5485E96}',
+    lProject.properties.Values['ProjectGuid']);
+  checkisEqual('16.1', lProject.properties.Values['ProjectVersion']);
+  checkisEqual('None', lProject.properties.Values['FrameworkType']);
+  checkisEqual('TestRunnerTests.dpr', lProject.properties.Values['MainSource']);
+  checkisEqual('True', lProject.properties.Values['Base']);
+  checkisEqual('3', lProject.properties.Values['TargetedPlatforms']);
+  checkisEqual('Console', lProject.properties.Values['AppType']);
+
+  newTest('Conditional Properties are populated');
+  checkisEqual('Debug', lProject.properties.Values['Config']);
+  checkisEqual('Win32', lProject.properties.Values['Platform']);
 
 end;
 
@@ -410,7 +452,7 @@ AddTestCase('Test Strip White Space', StripWhiteSpace_Works_as_expected);
 AddTestCase('Test Reset XML Node', ResetXMLNode_Works_as_expected);
 AddTestCase('Test GetXMLAttributes', GetXMLAttributes_Works_as_Expected);
 AddTestCase('Test XML Chunker Class', XMLNodeReader_Initialises_as_Expected);
-AddTestCase('Test PathDepth', PathDepth_works_as_expected);
+AddTestCase('Test PathDepth', PathDepth_Works_As_Expected);
 AddTestCase('Test XML Chunker Next Node',
   XMLNodeReader_NextNode_Works_as_Expected);
 FinaliseSet(Nil);
@@ -418,6 +460,8 @@ FinaliseSet(Nil);
 NewSet('MSBuild Condition Logic');
 PrepareSet(Prepare);
 AddTestCase('Test Parse Simple Conditions', Simple_Conditions_Parse_Correctly);
+AddTestCase('Test Conditions are Met', ConditionsAreMet_Works_Crrectly);
+AddTestCase('Test Properties are populated', Properties_are_set_as_expected);
 FinaliseSet(Finalise);
 
 finalization
