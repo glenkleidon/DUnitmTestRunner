@@ -25,7 +25,6 @@ type
     procedure DoExtraction(ANodeReader: IXMLNodeReader);
     function ConditionIndex(ANode: TXMLNode): Integer;
     function ConditionIsMet(ACondition: String): boolean;
-    function Unconditional(AIndex: Integer): boolean;
     procedure ExtractPropertiesFromDProj(AFilename: string);
     procedure ExtractProperties(AText: string);
     property Properties: TStrings read GetProperties;
@@ -38,10 +37,6 @@ type
     procedure DoExtraction(ANodeReader: IXMLNodeReader);
     function ConditionIndex(ANode: TXMLNode): Integer;
     function ConditionIsMet(ACondition: String): boolean;
-    /// <summary>
-    /// Helper method - just checks if the Condition Index <0 ie not found
-    /// </summary>
-    function Unconditional(AIndex: Integer): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -195,26 +190,50 @@ procedure TDelphiProjectProperties.DoExtraction(ANodeReader: IXMLNodeReader);
 var
   lNode: TXMLNode;
   lCondition: TXMLAttribute;
-  lIndex: Integer;
   lPropertyName: string;
+
+  Function SkipToNextNode: boolean;
+  var
+    lDepth: Integer;
+  begin
+    lDepth := PathDepth(lNode.Path);
+    repeat
+      lNode := ANodeReader.NextNode;
+    until (PathDepth(lNode.Path) <= lDepth);
+
+  end;
+
+  Function NodeIsRelevant: boolean;
+  var
+    lIndex: Integer;
+  begin
+    result := true;
+    lIndex := ConditionIndex(lNode);
+    if (lIndex >= 0) and (not ConditionIsMet(lNode.Attributes[lIndex].Value))
+    then
+    begin
+      SkipToNextNode;
+      result := NodeIsRelevant;
+    end;
+  end;
+
 begin
+
   while not ANodeReader.Done do
   begin
     lNode := ANodeReader.NextNode;
-    lIndex := ConditionIndex(lNode);
-    if Unconditional(lIndex) or ConditionIsMet(lNode.Attributes[lIndex].Value)
-    then
-      case PathDepth(lNode.Path) of
-        0 .. 2:
-          ; // ignore
-        3:
-          self.fProperties.Values[lNode.Name] := lNode.Value;
-        4 .. 9999:
-          begin
-            self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MAXINT),
-              '/', '.', [rfReplaceAll])] := lNode.Value;
-          end;
-      end;
+    if not NodeIsRelevant then continue;
+    case PathDepth(lNode.Path) of
+      0 .. 2:
+        ; // ignore
+      3:
+        self.fProperties.Values[lNode.Name] := lNode.Value;
+      4 .. 9999:
+        begin
+          self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MAXINT),
+            '/', '.', [rfReplaceAll])] := lNode.Value;
+        end;
+    end;
   end;
 end;
 
@@ -232,11 +251,6 @@ end;
 function TDelphiProjectProperties.GetProperties: TStrings;
 begin
   result := TStrings(self.fProperties);
-end;
-
-function TDelphiProjectProperties.Unconditional(AIndex: Integer): boolean;
-begin
-  result := AIndex < 0;
 end;
 
 function TDelphiProjectProperties.ConditionIndex(ANode: TXMLNode): Integer;

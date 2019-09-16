@@ -436,6 +436,11 @@ begin
   checkisEqual('True', lProject.properties.Values['Base']);
   checkisEqual('3', lProject.properties.Values['TargetedPlatforms']);
   checkisEqual('Console', lProject.properties.Values['AppType']);
+  checkisEqual('Delphi.Personality.12',lProject.properties.Values['Borland.Personality']);
+  checkisEqual('Application',lProject.properties.Values['Borland.ProjectType']);
+  checkisEqual('TestRunnerTests.dpr',lProject.properties.Values['Project.ProjectExtensions.BorlandProject.Delphi.Personality.Source.Source']);
+
+ // print(lProject.Properties.Text);
 
   newTest('Conditional Properties are populated');
   checkisEqual('Debug', lProject.properties.Values['Config']);
