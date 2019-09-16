@@ -168,21 +168,77 @@ begin
 
 end;
 
+Function IsConditionMet(AConditions: TProjectConditions;
+  AProperties: TStrings): boolean;
+var
+  i, l: Integer;
+  lCondition: TProjectCondition;
+  lArgumentOne, lArgumentTwo: string;
+  lArgumentResult: boolean;
+  Function GetArgument(AArgument: string): string;
+  var
+    lArgument: string;
+  begin
+    if copy(AArgument, 1, 2) = '$(' then
+    begin
+      lArgument := copy(AArgument, 3, length(AArgument) - 3);
+      result := AProperties.Values[lArgument];
+    end
+    else if copy(AArgument, 1, 1) = '''' then
+      result := copy(AArgument, 2, length(AArgument) - 1)
+    else
+    begin
+      result := AArgument;
+    end;
+  end;
+
+  function isLastGroup(AGroup: string): boolean;
+  begin
+     result := lastDelimiter('.', AGroup)=0;
+  end;
+
+begin
+  l := length(AConditions) - 1;
+  result := false;
+  for i := 0 to l do
+  begin
+    lCondition := AConditions[i];
+    lArgumentOne := GetArgument(lCondition.FirstArgument);
+    lArgumentTwo := GetArgument(lCondition.SecondArgument);
+    case lCondition.ConditionalOperator of
+      coEquals:
+        lArgumentResult := sameText(lArgumentOne, lArgumentTwo);
+      coNotEquals:
+        lArgumentResult := not sameText(lArgumentOne, lArgumentTwo);
+      coExists:
+        lArgumentResult := length(lArgumentOne) > 0;
+      coAnd:
+        // if we arent true here, then the condition fails immediately
+        if (not result) then exit;
+      coOr:
+        if (result) and isLastGroup(lCondition.Group) then exit;
+    end;
+    result := lArgumentResult;
+    if (length(lCondition.group)=0) and (not result) then exit;
+  end;
+
+end;
+
 { TDelphiProjectProperties }
 
 function TDelphiProjectProperties.ConditionIsMet(ACondition: String): boolean;
 begin
-  result := false;
+  result := IsConditionMet(ParseCondition(ACondition), Self.fProperties);
 end;
 
 constructor TDelphiProjectProperties.Create;
 begin
-  self.fProperties := TStringlist.Create;
+  Self.fProperties := TStringlist.Create;
 end;
 
 destructor TDelphiProjectProperties.Destroy;
 begin
-  freeandnil(self.fProperties);
+  freeandnil(Self.fProperties);
   inherited;
 end;
 
@@ -222,15 +278,16 @@ begin
   while not ANodeReader.Done do
   begin
     lNode := ANodeReader.NextNode;
-    if not NodeIsRelevant then continue;
+    if not NodeIsRelevant then
+      continue;
     case PathDepth(lNode.Path) of
       0 .. 2:
         ; // ignore
       3:
-        self.fProperties.Values[lNode.Name] := lNode.Value;
+        Self.fProperties.Values[lNode.Name] := lNode.Value;
       4 .. 9999:
         begin
-          self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MAXINT),
+          Self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MAXINT),
             '/', '.', [rfReplaceAll])] := lNode.Value;
         end;
     end;
@@ -250,7 +307,7 @@ end;
 
 function TDelphiProjectProperties.GetProperties: TStrings;
 begin
-  result := TStrings(self.fProperties);
+  result := TStrings(Self.fProperties);
 end;
 
 function TDelphiProjectProperties.ConditionIndex(ANode: TXMLNode): Integer;

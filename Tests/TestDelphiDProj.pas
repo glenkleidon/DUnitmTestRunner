@@ -423,7 +423,7 @@ var
 begin
   lProject := TDelphiProjectProperties.Create;
 
-  lProject.ExtractProperties(TEST_DATA_DPROJ_2003);
+  lProject.ExtractProperties(RemovebackTicks(TEST_DATA_DPROJ_2003));
   newTest('Properties have been extract');
   CheckIsTrue(lProject.Properties.Count>0);
 
