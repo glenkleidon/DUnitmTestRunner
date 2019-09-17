@@ -412,10 +412,75 @@ begin
 
 end;
 
-Procedure ConditionsAreMet_Works_Crrectly;
+Procedure ConditionsAreMet_Level_0_Works_Correctly;
+var
+  lProject: IDelphiProjectProperties;
 begin
-  notImplemented;
+  lProject := TDelphiProjectProperties.Create;
+  lProject.Properties.Values['Platform'] := 'Win32';
+
+  NewTest('Platform is Win32');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win64`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`Win32`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=``')));
+
+  NewTest('Platform is set back to ''''');
+  lProject.Properties.Values['Platform'] := '';
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win64`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`Win32`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=``')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==``')));
+
+  NewTest('First Argument True OR conditions at level 0');
+  lProject.Properties.Values['Platform'] := 'Win32';
+  lProject.Properties.Values['Config'] := 'Debug';
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` or `$(Config)`==``')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` or `$(Config)`!=`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` or `$(Config)`!=``')));
+
+  NewTest('Second Argument True OR conditions at level 0');
+  lProject.Properties.Values['Platform'] := 'Win32';
+  lProject.Properties.Values['Config'] := 'Debug';
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`Win32` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`Win64` or `$(Config)`==`Debug`')));
+
+  NewTest('AND conditions at level 0');
+  lProject.Properties.Values['Platform'] := 'Win32';
+  lProject.Properties.Values['Config'] := 'Debug';
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` and `$(Config)`==`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`` and `$(Config)`==`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` and `$(Config)`==``')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`` and `$(Config)`==``')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`Win64` and `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`!=`` and `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` and `$(Config)`!=``')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('`$(Platform)`==`Win32` and `$(Config)`!=`Base`')));
 end;
+
+
+Procedure ConditionsAreMet_Level_1_Works_Correctly;
+var
+  lProject: IDelphiProjectProperties;
+begin
+  lProject := TDelphiProjectProperties.Create;
+  lProject.Properties.Values['Platform'] := 'Win32';
+  lProject.Properties.Values['Base'] := '';
+  lProject.Properties.Values['Config'] := 'Debug';
+
+  NewTest('AND All Arguments True');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`!=`Debug`')));
+
+  NewTest('AND One Argument False');
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`` and `$(Base)`==``) and `$(Config)`!=`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==`True`) and `$(Config)`!=`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`!=``')));
+end;
+
 
 Procedure Properties_are_set_as_expected;
 var
@@ -433,7 +498,7 @@ begin
   checkisEqual('16.1', lProject.properties.Values['ProjectVersion']);
   checkisEqual('None', lProject.properties.Values['FrameworkType']);
   checkisEqual('TestRunnerTests.dpr', lProject.properties.Values['MainSource']);
-  checkisEqual('True', lProject.properties.Values['Base']);
+  checkisEqual('true', lProject.properties.Values['Base']);
   checkisEqual('3', lProject.properties.Values['TargetedPlatforms']);
   checkisEqual('Console', lProject.properties.Values['AppType']);
   checkisEqual('Delphi.Personality.12',lProject.properties.Values['Borland.Personality']);
@@ -465,7 +530,8 @@ FinaliseSet(Nil);
 NewSet('MSBuild Condition Logic');
 PrepareSet(Prepare);
 AddTestCase('Test Parse Simple Conditions', Simple_Conditions_Parse_Correctly);
-AddTestCase('Test Conditions are Met', ConditionsAreMet_Works_Crrectly);
+AddTestCase('Test Conditions are Met level 0', ConditionsAreMet_Level_0_Works_Correctly);
+AddTestCase('Test Conditions are Met level 1', ConditionsAreMet_Level_1_Works_Correctly);
 AddTestCase('Test Properties are populated', Properties_are_set_as_expected);
 FinaliseSet(Finalise);
 

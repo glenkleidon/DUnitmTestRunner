@@ -193,8 +193,20 @@ var
   end;
 
   function isLastGroup(AGroup: string): boolean;
+  var
+    lGroup: string;
+    p, c: Integer;
   begin
-     result := lastDelimiter('.', AGroup)=0;
+    c := 0;
+    lGroup := AGroup;
+    p := pos('.', lGroup);
+    while p > 0 do
+    begin
+      lGroup := copy(lGroup, p + 1, MAXINT);
+      inc(c);
+      p := pos('.', lGroup);
+    end;
+    result := (c < 2);
   end;
 
 begin
@@ -202,6 +214,7 @@ begin
   result := false;
   for i := 0 to l do
   begin
+    lArgumentResult := true;
     lCondition := AConditions[i];
     lArgumentOne := GetArgument(lCondition.FirstArgument);
     lArgumentTwo := GetArgument(lCondition.SecondArgument);
@@ -214,12 +227,14 @@ begin
         lArgumentResult := length(lArgumentOne) > 0;
       coAnd:
         // if we arent true here, then the condition fails immediately
-        if (not result) then exit;
+        if (not result) then
+          exit;
       coOr:
-        if (result) and isLastGroup(lCondition.Group) then exit;
+        if (result) and isLastGroup(lCondition.Group) then
+          exit;
     end;
     result := lArgumentResult;
-    if (length(lCondition.group)=0) and (not result) then exit;
+    if (not result) and (length(lCondition.group)=0) then exit;
   end;
 
 end;
