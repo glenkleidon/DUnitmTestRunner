@@ -135,7 +135,7 @@ Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
 
 implementation
 
-uses Registry, Delphi.Versions;
+uses Registry, Delphi.Versions, Delphi.DProj;
 
 function CompilerFromPlatform(APlatform: string): string;
 begin
@@ -241,21 +241,34 @@ end;
 
 Function PropertiesFromDProj(AProject: TDUnitMBuildData;
   AVersion: TDelphiVersion): TDUnitMBuildData;
+var
+  lProject: IDelphiProjectProperties;
+  lProperty: string;
 begin
+  result := AProject;
+  lProject := TDelphiProjectProperties.Create;
+  lProject.ExtractPropertiesFromDProj(changefileExt(AProject.ProjectName,
+    '.dproj'));
 
+  // Search Path
+  lProperty := trim(AProject.UnitSearchPath);
+  if (length(lProperty)>0) and (copy(lProperty,length(lProperty),1)<>';') then
+    lProperty := lProperty + ';';
+  AProject.UnitSearchPath := lProperty +
+    lProject.Properties.Values['DCC_UnitSearchPath'];
 
 end;
 
 Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
   : TDUnitMBuildData;
 begin
-
+  result := AProject;
 end;
 
 Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
   : TDUnitMBuildData;
 begin
-
+  result := AProject;
 end;
 
 Function PropertiesFromProject(AProject: TDUnitMBuildData;
@@ -269,8 +282,16 @@ begin
     else if fileExists(format('%s%s', [AProject.ProjectDir,
       changefileExt(AProject.ProjectName, '.cfg')])) then
       result := PropertiesFromCFG(AProject, AVersion);
-  end else
-   result := PropertiesFromDProj(AProject, AVersion);
+  end
+  else
+    result := PropertiesFromDProj(AProject, AVersion);
+end;
+
+Function GetProjectProperties(AProject: TDUnitMBuildData;
+  AVersion: TDelphiVersion): TDUnitMBuildData;
+begin
+  result := PropertiesFromRegistry(AProject, AVersion);
+  result := PropertiesFromProject(result, AVersion);
 end;
 
 Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
@@ -295,7 +316,7 @@ begin
 
   if lDelphi.DelphiVersion = -1 then
     raise Exception.CreateFmt('Delphi Version % not found', [ADelphiVersion]);
-  lProject := PropertiesFromRegistry(lProject, lDelphi);
+  lProject := GetProjectProperties(lProject, lDelphi);
   result := GetFinalCommandLine(DEFAULT_DUNITM_BUILD_COMMAND, lProject);
 end;
 
