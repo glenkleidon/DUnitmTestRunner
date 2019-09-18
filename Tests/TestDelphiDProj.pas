@@ -471,14 +471,60 @@ begin
   lProject.Properties.Values['Platform'] := 'Win32';
   lProject.Properties.Values['Base'] := '';
   lProject.Properties.Values['Config'] := 'Debug';
+  lProject.Properties.Values['FrameworkType'] := 'None';
 
   NewTest('AND All Arguments True');
-  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`!=`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`==`Debug`')));
 
   NewTest('AND One Argument False');
   CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`` and `$(Base)`==``) and `$(Config)`!=`Debug`')));
-  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==`True`) and `$(Config)`!=`Debug`')));
-  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`!=``')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==`True`) and `$(Config)`!=`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) and `$(Config)`==``')));
+
+  NewTest('AND in Group One OR in group 2');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`==`Win32` and `$(Base)`==``) or `$(Config)`!=`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks('(`$(Platform)`!=`Win32` and `$(Base)`==``) or `$(Config)`==`Debug`')));
+
+  NewTest('Nested Groups with AND in Group One OR in group 2 and OR in Group 3');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==``) or `$(FrameworkType)`==`None`) or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win64` and `$(Base)`==`False`) or `$(FrameworkType)`==``) or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==``) or `$(FrameworkType)`==``) or `$(Config)`==``')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win64` and `$(Base)`==`True`) or `$(FrameworkType)`==``) or `$(Config)`==``')));
+
+  NewTest('Nested Groups with AND in Group One OR in group 2 and AND in Group 3');
+  lProject.Properties.Values['FrameworkType'] := 'None';
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==``) or `$(FrameworkType)`==``) and `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`!=`Win32` and `$(Base)`==``) or `$(FrameworkType)`==`None`) and `$(Config)`==`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`!=`Win32` and `$(Base)`==``) or `$(FrameworkType)`==``) and `$(Config)`==`Debug`')));
+
+  NewTest('Multiple OR Groups with AND between');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` or `$(Base)`==``) and (`$(FrameworkType)`==`None` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win64` or `$(Base)`==``) and (`$(FrameworkType)`==`None` or `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win64` or `$(Base)`==``) and (`$(FrameworkType)`==`` or `$(Config)`==`Debug`')));
+
+  NewTest('Multiple AND Groups with OR between');
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==``) or (`$(FrameworkType)`==`` and `$(Config)`==`Debug`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==``) or (`$(FrameworkType)`==`None` and `$(Config)`==`Prod`')));
+  CheckIsTrue(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`==`Win32` and `$(Base)`==`True`) or (`$(FrameworkType)`==`None` and `$(Config)`==`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`!=`Win32` and `$(Base)`==`True`) or (`$(FrameworkType)`==`` and `$(Config)`==`Debug`')));
+  CheckIsFalse(lProject.ConditionIsMet(RemoveBackTicks(
+    '(`$(Platform)`!=`Win32` and `$(Base)`==``) or (`$(FrameworkType)`==`None` and `$(Config)`==`Prod`')));
+
 end;
 
 

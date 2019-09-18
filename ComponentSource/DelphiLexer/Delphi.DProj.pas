@@ -143,7 +143,8 @@ begin
         begin
           if not lInQuote then
           begin
-            dec(lGroupDepth);
+            if (lGroupDepth > 0) then
+              dec(lGroupDepth);
             SetGroupName;
             continue;
           end;
@@ -171,10 +172,13 @@ end;
 Function IsConditionMet(AConditions: TProjectConditions;
   AProperties: TStrings): boolean;
 var
-  i, l: Integer;
+  i, lMaxCondition: Integer;
   lCondition: TProjectCondition;
   lArgumentOne, lArgumentTwo: string;
   lArgumentResult: boolean;
+  lIgnoreGroup: string;
+  lLastIngnoredOperator: TConditionOperator;
+
   Function GetArgument(AArgument: string): string;
   var
     lArgument: string;
@@ -192,30 +196,69 @@ var
     end;
   end;
 
-  function isLastGroup(AGroup: string): boolean;
+  Function isLastOperator(AIndex: Integer;
+    AOperator: TConditionOperator): boolean;
   var
-    lGroup: string;
-    p, c: Integer;
+    i: Integer;
   begin
-    c := 0;
-    lGroup := AGroup;
-    p := pos('.', lGroup);
-    while p > 0 do
-    begin
-      lGroup := copy(lGroup, p + 1, MAXINT);
-      inc(c);
-      p := pos('.', lGroup);
-    end;
-    result := (c < 2);
+    result := true;
+    for i := AIndex + 1 to lMaxCondition do
+      if AConditions[i].ConditionalOperator = AOperator then
+      begin
+        result := false;
+        exit;
+      end;
+  end;
+
+  function isLastOr(AIndex: Integer): boolean;
+  begin
+    result := isLastOperator(AIndex, coOr);
+  end;
+
+  function isLastAnd(AIndex: Integer): boolean;
+  begin
+    result := isLastOperator(AIndex, coAnd);
   end;
 
 begin
-  l := length(AConditions) - 1;
+  lMaxCondition := length(AConditions) - 1;
   result := false;
-  for i := 0 to l do
+  lIgnoreGroup := '';
+  for i := 0 to lMaxCondition do
   begin
-    lArgumentResult := true;
     lCondition := AConditions[i];
+
+    // If at least one Argument has failed in this group, but there are more OR
+    // conditions to be assessed.
+    if (lCondition.Group = lIgnoreGroup) then
+    begin
+      case lCondition.ConditionalOperator of
+        coAnd:
+          begin
+            if isLastOr(i) then
+              exit;
+            lLastIngnoredOperator := coAnd;
+            continue;
+          end;
+        coOr:
+          begin
+            lLastIngnoredOperator := coOr;
+            continue;
+          end;
+      else
+        begin
+          if (result) then
+            continue
+          else if lLastIngnoredOperator = coAnd then
+            continue;
+        end;
+      end;
+    end;
+    lIgnoreGroup := '';
+    lLastIngnoredOperator := coNone;
+
+    // Check the arguments.
+    lArgumentResult := true;
     lArgumentOne := GetArgument(lCondition.FirstArgument);
     lArgumentTwo := GetArgument(lCondition.SecondArgument);
     case lCondition.ConditionalOperator of
@@ -226,17 +269,32 @@ begin
       coExists:
         lArgumentResult := length(lArgumentOne) > 0;
       coAnd:
-        // if we arent true here, then the condition fails immediately
+        // if we aren't true here, then the condition fails immediately
         if (not result) then
           exit;
       coOr:
-        if (result) and isLastGroup(lCondition.Group) then
-          exit;
+        if (result) then
+        begin
+          if isLastAnd(i) then
+            exit
+          else
+          begin
+            // its ok to ignore this group because the previous is already
+            // true
+            lIgnoreGroup := lCondition.Group;
+            continue;
+          end;
+        end;
     end;
     result := lArgumentResult;
-    if (not result) and (length(lCondition.group)=0) then exit;
+    if (not result) then
+    begin
+      if isLastOr(i) then
+        exit
+      else
+        lIgnoreGroup := lCondition.Group;
+    end;
   end;
-
 end;
 
 { TDelphiProjectProperties }
