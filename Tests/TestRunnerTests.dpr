@@ -8,7 +8,9 @@ uses
   MiniTestFramework,
   TestRecursiveFolderSearch in 'TestRecursiveFolderSearch.pas',
   TestTTestBuilder in 'TestTTestBuilder.pas',
-  Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas';
+  Delphi.Lexer in '..\ComponentSource\DelphiLexer\Delphi.Lexer.pas',
+  Delphi.Versions in '..\ComponentSource\DelphiLexer\Delphi.Versions.pas',
+  Delphi.DProj in '..\ComponentSource\DelphiLexer\Delphi.DProj.pas';
 
 begin
   try

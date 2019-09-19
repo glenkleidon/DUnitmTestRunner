@@ -37,6 +37,18 @@ const
     '  </ProjectExtensions>'+
      '</Project>';
 
+    TEST_DATA_CUMULATIVE =
+    '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' +
+    '  <PropertyGroup>' +
+    '      <ProjectVersion>16.1</ProjectVersion>' +
+    '      <FrameworkType>None</FrameworkType>' +
+    '      <DCC_UnitSearchPath>UnitPath1,UnitPath2</DCC_UnitSearchPath>'+
+    '      <DCC_UnitSearchPath>UnitPath3,UnitPath4;$(DCC_UnitSearchPath);..\$(ProjectVersion)</DCC_UnitSearchPath>' +
+    '      <DCC_UnitSearchPath>UnitPath5,UnitPath6;$(DCC_UnitSearchPath);..\$(FrameworkType)</DCC_UnitSearchPath>' +
+    '  </PropertyGroup>' +
+    '</Project>';
+
+
 implementation
 
 uses classes;
@@ -559,6 +571,25 @@ begin
 
 end;
 
+Procedure Property_Values_Accumulate_as_Assigned;
+var
+  lProject: IDelphiProjectProperties;
+  lExpected: string;
+begin
+  lProject := TDelphiProjectProperties.Create;
+  lProject.ExtractProperties(TEST_DATA_CUMULATIVE);
+  NewTest('Project Version');
+  CheckIsEqual('16.1', lProject.Properties.Values['ProjectVersion']);
+  NewTest('Framework Type');
+  CheckIsEqual('None', lProject.Properties.Values['FrameworkType']);
+
+  NewTest('Search Path');
+  lExpected := 'UnitPath5,UnitPath6;UnitPath3,UnitPath4;UnitPath1,UnitPath2;'+
+  '..\16.1;..\None';
+  CheckIsEqual(lExpected, lProject.Properties.Values['DCC_UnitSearchPath']);
+
+end;
+
 initialization
 
 NewSet('XML Node Reader');
@@ -572,6 +603,12 @@ AddTestCase('Test PathDepth', PathDepth_Works_As_Expected);
 AddTestCase('Test XML Chunker Next Node',
   XMLNodeReader_NextNode_Works_as_Expected);
 FinaliseSet(Nil);
+
+NewSet('Property Tests');
+PrepareSet(Prepare);
+AddTestCase('Property Values accumulate as assigned', Property_Values_Accumulate_as_Assigned);
+FinaliseSet(Finalise);
+
 
 NewSet('MSBuild Condition Logic');
 PrepareSet(Prepare);

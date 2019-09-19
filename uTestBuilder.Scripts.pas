@@ -179,6 +179,9 @@ begin
   if not DirectoryExists(AProject.DCUOutputPath) then
     ForceDirectories(AProject.DCUOutputPath);
 
+  result := Stringreplace(result, '<UNITSEARCHPATH>', AProject.UnitSearchPath
+    + ';' + AProject.IncludeSearchPath, [rfIgnoreCase]);
+
   result := Stringreplace(result, '<INCLUDESEARCHPATH>', AProject.UnitSearchPath
     + ';' + AProject.IncludeSearchPath, [rfIgnoreCase]);
 
@@ -250,12 +253,26 @@ begin
   lProject.ExtractPropertiesFromDProj(changefileExt(AProject.ProjectName,
     '.dproj'));
 
+  result.ConditionalDefines := lProject.Properties.Values['DCC_Define'];
+  result.TargetPlatform := lProject.Properties.Values['Platform'];
+  result.UnitAliases := lProject.Properties.values['DCC_UnitAlias'];
+  result.DCUOutputPath := lProject.Properties.Values['DCC_DcuOutput'];
+  result.OutputPath := lProject.Properties.Values['DCC_ExeOutput'];
+  result.Namespaces := lProject.Properties.Values['DCC_Namespace'];
+
+
   // Search Path
   lProperty := trim(AProject.UnitSearchPath);
   if (length(lProperty)>0) and (copy(lProperty,length(lProperty),1)<>';') then
     lProperty := lProperty + ';';
-  AProject.UnitSearchPath := lProperty +
+  result.UnitSearchPath := lProperty +
     lProject.Properties.Values['DCC_UnitSearchPath'];
+
+  result.IncludeSearchPath := result.UnitSearchPath + ';' + lProject.Properties.Values['BRCC_IncludePath'];
+  result.ObjectSearchPath := result.UnitSearchPath;
+
+
+
 
 end;
 
@@ -290,8 +307,8 @@ end;
 Function GetProjectProperties(AProject: TDUnitMBuildData;
   AVersion: TDelphiVersion): TDUnitMBuildData;
 begin
-  result := PropertiesFromRegistry(AProject, AVersion);
-  result := PropertiesFromProject(result, AVersion);
+  result := PropertiesFromProject(AProject, AVersion);
+  result := PropertiesFromRegistry(Result, AVersion);
 end;
 
 Function Commandline(AProjectPath: string; ADelphiVersion: string): string;

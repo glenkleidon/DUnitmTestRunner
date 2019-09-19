@@ -80,6 +80,8 @@
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <BRCC_IncludePath>c:\temp;$(BRCC_IncludePath)</BRCC_IncludePath>
+        <DCC_UnitAlias>DelphiVersions=Delphi.Versions;$(DCC_UnitAlias)</DCC_UnitAlias>
         <Debugger_RunParams>/p</Debugger_RunParams>
         <Manifest_File>None</Manifest_File>
         <VerInfo_Locale>1033</VerInfo_Locale>

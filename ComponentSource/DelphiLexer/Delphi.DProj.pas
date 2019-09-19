@@ -46,8 +46,46 @@ type
   End;
 
 function ParseCondition(ACondition: string): TProjectConditions;
+function ExpandValue(AValue: string; AProperties: TStrings;
+  AReplaceIfEmpty: boolean = true): string;
 
 implementation
+
+function ExpandValue(AValue: string; AProperties: TStrings;
+  AReplaceIfEmpty: boolean = true): string;
+var
+  p, q, sp, ilp: Integer;
+  pValue: pChar;
+  llPropertyName: string;
+  llPropertyValue: string;
+begin
+  result := AValue;
+  sp := 1;
+  repeat
+    llPropertyValue:='';
+    pValue := @result[sp];
+    p := pos('$(', pValue);
+    if p < 1 then
+      exit;
+    pValue := @result[sp + p + 1];
+    q := pos(')', pValue);
+    if q < 1 then
+      exit;
+    llPropertyName := copy(result, sp+p + 1, q - 1);
+    llPropertyValue := AProperties.Values[llPropertyName];
+    sp := sp+p;
+    if (AReplaceIfEmpty) or ((not AReplaceIfEmpty) and
+      (length(llPropertyValue) > 0)) then
+    begin
+      result := copy(result, 1, sp - 2) + llPropertyValue +
+        copy(result, sp + q + 1, MaxInt);
+      // check for infinite loop
+      ilp := pos(format('$(%s)',[llPropertyName]), llPropertyValue);
+      if (ilp>0) then
+        sp := sp + ilp+length(llPropertyValue)+2;
+    end;
+  until (false);
+end;
 
 function ParseCondition(ACondition: string): TProjectConditions;
 var
@@ -301,17 +339,17 @@ end;
 
 function TDelphiProjectProperties.ConditionIsMet(ACondition: String): boolean;
 begin
-  result := IsConditionMet(ParseCondition(ACondition), Self.fProperties);
+  result := IsConditionMet(ParseCondition(ACondition), self.fProperties);
 end;
 
 constructor TDelphiProjectProperties.Create;
 begin
-  Self.fProperties := TStringlist.Create;
+  self.fProperties := TStringlist.Create;
 end;
 
 destructor TDelphiProjectProperties.Destroy;
 begin
-  freeandnil(Self.fProperties);
+  freeandnil(self.fProperties);
   inherited;
 end;
 
@@ -355,13 +393,16 @@ begin
       continue;
     case PathDepth(lNode.Path) of
       0 .. 2:
-        ; // ignore
+        ;
+      // ignore
       3:
-        Self.fProperties.Values[lNode.Name] := lNode.Value;
+        self.fProperties.Values[lNode.Name] :=
+          ExpandValue(lNode.Value, self.Properties);
       4 .. 9999:
         begin
-          Self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MAXINT),
-            '/', '.', [rfReplaceAll])] := lNode.Value;
+          self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MaxInt),
+            '/', '.', [rfReplaceAll])] := ExpandValue(lNode.Value,
+            self.Properties);
         end;
     end;
   end;
@@ -380,7 +421,7 @@ end;
 
 function TDelphiProjectProperties.GetProperties: TStrings;
 begin
-  result := TStrings(Self.fProperties);
+  result := TStrings(self.fProperties);
 end;
 
 function TDelphiProjectProperties.ConditionIndex(ANode: TXMLNode): Integer;

@@ -52,7 +52,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>TestRunnerTests</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\;..\componentSource\Dunitm;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\;..\componentSource\Dunitm;..\componentSource\DelphiLexer;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -110,6 +110,8 @@
         <DCCReference Include="TestRecursiveFolderSearch.pas"/>
         <DCCReference Include="TestTTestBuilder.pas"/>
         <DCCReference Include="..\ComponentSource\DelphiLexer\Delphi.Lexer.pas"/>
+        <DCCReference Include="..\ComponentSource\DelphiLexer\Delphi.Versions.pas"/>
+        <DCCReference Include="..\ComponentSource\DelphiLexer\Delphi.DProj.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
