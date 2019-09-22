@@ -94,7 +94,7 @@ end;
 Function CheckForComment(AText: string; AStartPos: integer = 1): TTokenInfo;
 var
   lSize: integer;
-  lPos, lCommentIndex, i: integer;
+  lPos, i: integer;
   First2Chars: String;
 begin
   result.Init;
@@ -150,10 +150,10 @@ end;
 
 Function NextToken(AText: string; AStartPos: integer = 1): TTokenInfo;
 var
-  p, lStart: integer;
+  lStart: integer;
   lSize: integer;
   c: Char;
-  lInQuote, lDone: boolean;
+  lInQuote : boolean;
   lToken: string;
 begin
   result.Init;
@@ -174,7 +174,6 @@ begin
 
   c := AText[result.EndPos];
   lInQuote := c = TOKEN_QUOTE;
-  lDone := false;
   while true do
   begin
     if lInQuote then
@@ -260,7 +259,7 @@ Function LocateToken(AToken: String; ATokenType: TDelphiTokenType;
 var
   lSize, lPos: integer;
   lToken: TTokenInfo;
-  lDone, lDoStop, lUseTerminator: boolean;
+  lDoStop, lUseTerminator: boolean;
 begin
   result.Init;
   lDoStop := length(AStopAt) > 0;

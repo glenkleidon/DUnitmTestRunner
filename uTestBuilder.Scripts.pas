@@ -5,11 +5,11 @@ interface
 uses SysUtils, Classes;
 
 const
-  DEFAULT_DUNITM_BUILD_COMMAND = '<DCCPATH><DCCEXE> ' + '-$O- ' + '-$W+ ' +
-    '--no-config ' + '-B ' + '-TX.exe ' + '-A<UNITALIASES> ' +
+  DEFAULT_DUNITM_BUILD_COMMAND = '<DCCPATH>\<DCCEXE> ' + '-$O- -$W+ ' +
+    '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
     '-D<CONDITIONALDEFINES> ' + '-E<OUTPUTPATH> ' + '-I<INCLUDESEARCHPATH> ' +
     '-NU<DCUOUTPUTPATH> ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
-    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC ' + '-V ' + '-VN '
+    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -V -VN '
     + '<PROJECTNAME>';
   REG_ROOT_DIR = 'RootDir';
   REG_LIBRARY = '\Library';
@@ -21,16 +21,22 @@ const
   PLATFORM_WIN64 = 'Win64';
   PLATFORM_OSX32 = 'OSX32';
 
-  DELPHI_BIN_PATH = 'bin\';
+  DELPHI_BIN_PATH = '\bin';
+  DELPHI_LIB_PATH = '\lib';
+  DELPHI_ENV_OVERRIDES = 'Environment Variables';
   DELPHI_COMPILER_WIN32 = 'dcc32.exe';
   DELPHI_COMPILER_WIN64 = 'dcc64.exe';
   DELPHI_COMPILER_OSX32 = '?';
 
 Type
   TDUnitMBuildData = Record
+    Version: string;
+    DelphiRootPath: string;
     DelphiBinPath: string;
+    CommonPath: string;
     DCCPath: string;
     DCCExe: string;
+    DCCLib: string;
     UnitAliases: string;
     ConditionalDefines: string;
     OutputPath: string;
@@ -135,7 +141,62 @@ Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
 
 implementation
 
-uses Registry, Delphi.Versions, Delphi.DProj;
+uses Registry, Delphi.Versions, Delphi.DProj, windows;
+
+function PathToDir(APath: string): string;
+begin
+  result := APath;
+  if copy(result, length(result), 1) = '\' then
+    result := copy(result, 1, length(result) - 1);
+end;
+
+function RemoveDuplicatePathbackslash(APath: string): string;
+begin
+  result := APath;
+  while pos('\\', copy(result, 3, MaxInt)) > 0 do
+    result := copy(result, 1, 2) + StringReplace(copy(result, 3, MaxInt), '\\',
+      '\', [rfReplaceAll]);
+
+end;
+
+function QuoteDirectories(ADirectories: string): string;
+var
+  lList: TStringlist;
+  i: integer;
+  lValue: string;
+  lDuplicateIndex: integer;
+begin
+  lList := TStringlist.Create;
+  try
+    lList.Text := StringReplace(ADirectories, ';', #13#10, [rfReplaceAll]);
+    for i := lList.Count - 1 downto 0 do
+    begin
+      lValue := lList[i];
+      lDuplicateIndex := lList.IndexOf(lValue);
+      if lDuplicateIndex < i then
+      begin
+        lList.Delete(i);
+        continue;
+      end;
+      if length(lValue) = 0 then
+      begin
+        lList.Delete(i);
+      end
+      else
+      begin
+        lValue := RemoveDuplicatePathbackslash(Trim(lValue));
+        if (pos('"', lValue) = 0) and (pos(' ', lValue) > 0) then
+          lValue := format('"%s"', [lValue]);
+        lList[i] := lValue;
+      end;
+    end;
+    result := StringReplace(lList.Text, #13#10, ';', [rfReplaceAll]);
+    result := copy(result, 1, length(result) - 1); // remove the trailing ;
+  finally
+    freeandnil(lList);
+  end;
+
+end;
 
 function CompilerFromPlatform(APlatform: string): string;
 begin
@@ -148,83 +209,112 @@ begin
     result := DELPHI_COMPILER_OSX32;
 end;
 
-function GetFinalCommandLine(ACommand: string;
-  AProject: TDUnitMBuildData): string;
+function GetFinalCommandLine(ACommand: string; AProject: TDUnitMBuildData;
+  AProperties: IDelphiProjectProperties): string;
 begin
   result := ACommand;
-  result := Stringreplace(result, '<DCCPATH>', AProject.DCCPath,
+  result := StringReplace(result, '<DCCPATH>', AProject.DCCPath,
     [rfReplaceAll, rfIgnoreCase]);
-  result := Stringreplace(result, '<DCCEXE>', AProject.DCCExe,
+  result := StringReplace(result, '<DCCEXE>', AProject.DCCExe,
     [rfReplaceAll, rfIgnoreCase]);
 
   if length(AProject.UnitAliases) = 0 then
-    result := Stringreplace(result, '-A<UNITALIASES> ', '', [rfIgnoreCase])
+    result := StringReplace(result, '-A<UNITALIASES> ', '', [rfIgnoreCase])
   else
-    result := Stringreplace(result, '<UNITALIASES>', AProject.UnitAliases,
+    result := StringReplace(result, '<UNITALIASES>', AProject.UnitAliases,
       [rfIgnoreCase]);
 
   if length(AProject.ConditionalDefines) = 0 then
-    result := Stringreplace(result, '-D<CONDITIONALDEFINES> ', '',
+    result := StringReplace(result, '-D<CONDITIONALDEFINES> ', '',
       [rfIgnoreCase])
   else
-    result := Stringreplace(result, '<CONDITIONALDEFINES>',
+    result := StringReplace(result, '<CONDITIONALDEFINES>',
       AProject.ConditionalDefines, [rfIgnoreCase]);
 
-  result := Stringreplace(result, '<OUTPUTPATH>', AProject.OutputPath,
-    [rfIgnoreCase]);
-  result := Stringreplace(result, '<DCUOUTPUTPATH>', AProject.OutputPath,
-    [rfIgnoreCase]);
+  result := StringReplace(result, '<OUTPUTPATH>',
+    QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
+  result := StringReplace(result, '<DCUOUTPUTPATH>',
+    QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
+
   if not DirectoryExists(AProject.OutputPath) then
     ForceDirectories(AProject.OutputPath);
   if not DirectoryExists(AProject.DCUOutputPath) then
     ForceDirectories(AProject.DCUOutputPath);
 
-  result := Stringreplace(result, '<UNITSEARCHPATH>', AProject.UnitSearchPath
-    + ';' + AProject.IncludeSearchPath, [rfIgnoreCase]);
+  // Expand the Search Paths
+  AProject.UnitSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
+    (AppendPath(AProject.UnitSearchPath, DEFAULT_BDSDCUDIR));
+  AProject.IncludeSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
+    (AProject.IncludeSearchPath);
+  AProject.ResourceSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
+    (AProject.ResourceSearchPath);
+  AProject.ObjectSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
+    (AProject.ObjectSearchPath);
 
-  result := Stringreplace(result, '<INCLUDESEARCHPATH>', AProject.UnitSearchPath
-    + ';' + AProject.IncludeSearchPath, [rfIgnoreCase]);
+  result := StringReplace(result, '<UNITSEARCHPATH>',
+    QuoteDirectories(AProject.UnitSearchPath), [rfIgnoreCase]);
 
-  result := Stringreplace(result, '<OBJECTSEARCHPATH>', AProject.UnitSearchPath
-    + ';' + AProject.ObjectSearchPath, [rfIgnoreCase]);
+  result := StringReplace(result, '<INCLUDESEARCHPATH>',
+    QuoteDirectories(AppendPath(AProject.UnitSearchPath,
+    AProject.IncludeSearchPath)), [rfIgnoreCase]);
 
-  result := Stringreplace(result, '<RESOURCESEARCHPATH>',
-    AProject.UnitSearchPath + ';' + AProject.ResourceSearchPath,
-    [rfIgnoreCase]);
+  result := StringReplace(result, '<OBJECTSEARCHPATH>',
+    QuoteDirectories(AppendPath(AProject.UnitSearchPath,
+    AProject.ObjectSearchPath)), [rfIgnoreCase]);
+
+  result := StringReplace(result, '<RESOURCESEARCHPATH>',
+    QuoteDirectories(AppendPath(AProject.UnitSearchPath,
+    AProject.ResourceSearchPath)), [rfIgnoreCase]);
 
   if length(AProject.Namespaces) = 0 then
-    result := Stringreplace(result, '-NS<NAMESPACES> ', '', [rfIgnoreCase])
+    result := StringReplace(result, '-NS<NAMESPACES> ', '', [rfIgnoreCase])
   else
-    result := Stringreplace(result, '<NAMESPACES>', AProject.Namespaces,
+    result := StringReplace(result, '<NAMESPACES>', AProject.Namespaces,
       [rfIgnoreCase]);
 
-  result := Stringreplace(result, '<PROJECTNAME>', AProject.ProjectName,
+  result := StringReplace(result, '<PROJECTNAME>', AProject.ProjectName,
     [rfIgnoreCase]);
 
+  result := AProperties.Handlers.ExpandDelphiEnvVariables(result);
 end;
 
 Function PropertiesFromRegistry(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion): TDUnitMBuildData;
+  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
+  : TDUnitMBuildData;
 var
   lRegKey: String;
   lCurrentKey: string;
-  lReg: TRegistry;
+  lReg, lEnvReg: TRegistry;
+  lRoot: string;
 begin
   result := AProject;
   lRegKey := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
   if lRegKey.length = 0 then
     raise Exception.Create('Registry Path not found for this version');
   lReg := TRegistry.Create;
+  lEnvReg := TRegistry.Create;
   try
+    lReg.RootKey := HKEY_CURRENT_USER;
+    lEnvReg.RootKey := HKEY_CURRENT_USER;
     lReg.OpenKeyReadOnly(lRegKey);
+    lEnvReg.OpenKeyReadOnly(lRegKey + DELPHI_ENV_OVERRIDES);
     if not lReg.ValueExists(REG_ROOT_DIR) then
       raise Exception.CreateFmt('Delphi %s not installed correctly',
         [AVersion.ProductName]);
-    result.DelphiBinPath := lReg.ReadString(REG_ROOT_DIR);
-    result.DCCPath := result.DelphiBinPath + DELPHI_BIN_PATH;
+
+    // Root Folder for Delphi
+    if lEnvReg.ValueExists(REG_BDS) then
+      lRoot := lEnvReg.ReadString(REG_BDS);
+    if length(lRoot) = 0 then
+      lRoot := lReg.ReadString(REG_ROOT_DIR);
+    lRoot := PathToDir(lRoot);
+
+    result.DelphiRootPath := lRoot;
+    result.DelphiBinPath := lRoot + DELPHI_BIN_PATH;
+    result.DCCPath := result.DelphiBinPath;
+    result.DCCLib := lRoot + DELPHI_LIB_PATH;
     lReg.CloseKey;
 
-    // Library Search Path
     lCurrentKey := lRegKey + REG_LIBRARY;
     if result.TargetPlatform = PLATFORM_WIN64 then
     begin
@@ -234,95 +324,114 @@ begin
     else if AVersion.DelphiVersion > 12 then
       lCurrentKey := lCurrentKey + REG_WIN32;
 
+    // Library Search Path
     lReg.OpenKeyReadOnly(lCurrentKey);
     if lReg.ValueExists(REG_VALUE_SEARCHPATH) then
-      result.UnitSearchPath := lReg.ReadString(REG_VALUE_SEARCHPATH);
+    begin
+      result.UnitSearchPath :=
+        QuoteDirectories(AppendPath(result.UnitSearchPath,
+        lReg.ReadString(REG_VALUE_SEARCHPATH)));
+    end;
+
+    AProperties.Properties.Values[ENV_STUDIONAME] :=
+      DelphiStudioByDelphiVersion(AVersion.DelphiVersion);
+    AProperties.Properties.Values[REG_BDS] := result.DelphiRootPath;
+    AProperties.Properties.Values[REG_BDSBIN] := result.DelphiBinPath;
+    AProperties.Properties.Values[REG_BDSINCLUDE] := result.IncludeSearchPath;
+    AProperties.Properties.Values[REG_BDSLIB] := result.DCCLib;
+
   finally
+    freeandnil(lEnvReg);
     freeandnil(lReg);
   end;
 end;
 
 Function PropertiesFromDProj(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion): TDUnitMBuildData;
+  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
+  : TDUnitMBuildData;
 var
-  lProject: IDelphiProjectProperties;
   lProperty: string;
 begin
   result := AProject;
-  lProject := TDelphiProjectProperties.Create;
-  lProject.ExtractPropertiesFromDProj(changefileExt(AProject.ProjectName,
-    '.dproj'));
+  AProperties.ExtractPropertiesFromDProj(AProject.ProjectDir + '\' +
+    changefileExt(AProject.ProjectName, '.dproj'));
 
-  result.ConditionalDefines := lProject.Properties.Values['DCC_Define'];
-  result.TargetPlatform := lProject.Properties.Values['Platform'];
-  result.UnitAliases := lProject.Properties.values['DCC_UnitAlias'];
-  result.DCUOutputPath := lProject.Properties.Values['DCC_DcuOutput'];
-  result.OutputPath := lProject.Properties.Values['DCC_ExeOutput'];
-  result.Namespaces := lProject.Properties.Values['DCC_Namespace'];
-
+  result.ConditionalDefines := AProperties.Properties.Values['DCC_Define'];
+  result.TargetPlatform := AProperties.Properties.Values['Platform'];
+  result.UnitAliases := AProperties.Properties.Values['DCC_UnitAlias'];
+  result.DCUOutputPath := AProperties.Properties.Values['DCC_DcuOutput'];
+  result.OutputPath := AProperties.Properties.Values['DCC_ExeOutput'];
+  result.Namespaces := AProperties.Properties.Values['DCC_Namespace'];
 
   // Search Path
-  lProperty := trim(AProject.UnitSearchPath);
-  if (length(lProperty)>0) and (copy(lProperty,length(lProperty),1)<>';') then
-    lProperty := lProperty + ';';
-  result.UnitSearchPath := lProperty +
-    lProject.Properties.Values['DCC_UnitSearchPath'];
+  lProperty := Trim(AProject.UnitSearchPath);
+  if (length(lProperty) > 0) and (copy(lProperty, length(lProperty), 1) <> ';')
+  then
+    lProperty := ';' + lProperty;
+  result.UnitSearchPath := AProperties.Properties.Values['DCC_UnitSearchPath'] +
+    lProperty;
 
-  result.IncludeSearchPath := result.UnitSearchPath + ';' + lProject.Properties.Values['BRCC_IncludePath'];
+  result.IncludeSearchPath := result.UnitSearchPath + ';' +
+    AProperties.Properties.Values['BRCC_IncludePath'];
   result.ObjectSearchPath := result.UnitSearchPath;
-
-
-
 
 end;
 
-Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
-  : TDUnitMBuildData;
+Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
+  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
 begin
   result := AProject;
 end;
 
-Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion)
-  : TDUnitMBuildData;
+Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
+  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
 begin
   result := AProject;
 end;
 
 Function PropertiesFromProject(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion): TDUnitMBuildData;
+  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
+  : TDUnitMBuildData;
 begin
   if AVersion.DelphiVersion < 9 then
   begin
-    if fileExists(format('%s%s', [AProject.ProjectDir,
+    if fileExists(format('%s\%s', [AProject.ProjectDir,
       changefileExt(AProject.ProjectName, '.dof')])) then
-      result := PropertiesFromDOF(AProject, AVersion)
-    else if fileExists(format('%s%s', [AProject.ProjectDir,
+      result := PropertiesFromDOF(AProject, AVersion, AProperties)
+    else if fileExists(format('%s\%s', [AProject.ProjectDir,
       changefileExt(AProject.ProjectName, '.cfg')])) then
-      result := PropertiesFromCFG(AProject, AVersion);
+      result := PropertiesFromCFG(AProject, AVersion, AProperties);
   end
   else
-    result := PropertiesFromDProj(AProject, AVersion);
+    result := PropertiesFromDProj(AProject, AVersion, AProperties);
 end;
 
 Function GetProjectProperties(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion): TDUnitMBuildData;
+  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties = nil)
+  : TDUnitMBuildData;
 begin
-  result := PropertiesFromProject(AProject, AVersion);
-  result := PropertiesFromRegistry(Result, AVersion);
+  if AProperties = nil then
+    AProperties := TDelphiProjectProperties.Create;
+  result := PropertiesFromRegistry(AProject, AVersion, AProperties);
+  result := PropertiesFromProject(result, AVersion, AProperties);
 end;
 
 Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
 var
   lProject: TDUnitMBuildData;
   lDelphi: TDelphiVersion;
+  lProperties: IDelphiProjectProperties;
 begin
   result := '';
-  lProject.ProjectDir := extractFilepath(AProjectPath);
-  lProject.ProjectName := changefileExt(AProjectPath, '.dpr');
+  lProperties := TDelphiProjectProperties.Create;
+  lProject.ProjectDir := ExtractFileDir(AProjectPath);
+
+  lProject.ProjectName := changefileExt(extractFileName(AProjectPath), '.dpr');
+  lProject.Version := ADelphiVersion;
 
   // Default values - these may get overridden;
   lProject.OutputPath := lProject.ProjectDir;
-  lProject.DCUOutputPath := lProject.ProjectDir + 'DCU\';
+  lProject.DCUOutputPath := lProject.ProjectDir + '\DCU';
   lProject.TargetPlatform := PLATFORM_WIN32;
   lProject.DCCExe := DELPHI_COMPILER_WIN32;
 
@@ -333,8 +442,18 @@ begin
 
   if lDelphi.DelphiVersion = -1 then
     raise Exception.CreateFmt('Delphi Version % not found', [ADelphiVersion]);
-  lProject := GetProjectProperties(lProject, lDelphi);
-  result := GetFinalCommandLine(DEFAULT_DUNITM_BUILD_COMMAND, lProject);
+  // Set Version Specific Properties
+  lProperties.Properties.Values[ENV_PRODUCTVERSION] :=
+    DelphiProductVersion(lDelphi);
+  lProperties.Properties.Values[ENV_BDSCOMMONDIR] := DEFAULT_BDSCOMMON;
+  lProperties.Properties.Values[ENV_BDSUSERDIR] := DEFAULT_BDSUSERDIR;
+  lProperties.Properties.Values[ENV_BDSCOMPANY] :=
+    DelphiCompanyByDelphiVersion(lDelphi.DelphiVersion);
+
+  // Set Up the properties from the Project File and Appropriate version registry
+  lProject := GetProjectProperties(lProject, lDelphi, lProperties);
+  result := GetFinalCommandLine(DEFAULT_DUNITM_BUILD_COMMAND, lProject,
+    lProperties);
 end;
 
 end.

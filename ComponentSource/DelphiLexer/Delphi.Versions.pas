@@ -13,9 +13,35 @@ type
   End;
 
 const
-  EMBARCADERO_KEY = 'Software\Embarcadero\BDS\%u.0';
-  CODEGEAR_KEY = 'Software\CodeGear\BDS\%u.0';
-  BORLAND_KEY = 'Software\Borland\Delphi\%u.0';
+  REG_BDS = 'BDS';
+  REG_BDSBIN = 'BDSBIN';
+  REG_BDSINCLUDE = 'BDSINCLUDE';
+  REG_BDSLIB = 'BDSLIB';
+
+  REG_DELPHI = 'Delphi';
+
+  ENV_PUBLIC = 'PUBLIC';
+  ENV_STUDIONAME = 'STUDIONAME';
+  ENV_PRODUCTVERSION = 'PRODUCTVERSION';
+  ENV_BDSCOMPANY = 'BDSCOMPANY';
+  ENV_BDSCOMMONDIR = 'BDSCOMMONDIR';
+  ENV_BDSUSERDIR = 'BDSUSERDIR';
+
+
+  EMBARCADERO_KEY = 'Software\Embarcadero\%s\%u.0';
+  CODEGEAR_KEY = 'Software\CodeGear\%s\%u.0';
+  BORLAND_KEY = 'Software\Borland\%s\%u.0';
+
+  COMPANY_EMBARCADERO = 'Embarcadero';
+  COMPANY_BORLAND = 'Borland';
+  COMPANY_CODEGEAR = 'CodeGear';
+
+  CODEGEAR_STUDIO = 'RAD Studio';
+  EMBARCADERO_STUDIO = 'Studio';
+
+  DEFAULT_BDSCOMMON = '$(Public)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
+  DEFAULT_BDSUSERDIR  ='$(USERPROFILE)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
+  DEFAULT_BDSDCUDIR  = '$(BDSLIB)\$(Platform)\$(Config)';
 
   MAX_VERSION = 12;
   MAX_SUPPORTED_VERSION = 12;
@@ -60,9 +86,54 @@ Function DelphiRegKeyByBDSVersion(ABDSVersion: integer): string;
 Function DelphiRegKeyByProductName(AProductName: String): string;
 Function DelphiRegKeyByShortName(AShortName: String): string;
 
+Function DelphiEnvVariableByDelphiVersion(AEnvironmentVariable: string; AVersion: integer): string;
+Function DelphiStudioByDelphiVersion(AVersion: integer): string;
+Function DelphiCompanyByDelphiVersion(AVersion: integer): string;
+Function DelphiProductVersion(AVersion : TDelphiVersion): string;
+
 var DefaultDelphiVersion : integer;
+var RegistryOverride : string = '';
 
 implementation
+
+Function DelphiProductVersion(AVersion : TDelphiVersion): string;
+begin
+  case Aversion.DelphiVersion of
+    1..8 : format('%u.0',[AVersion.DelphiVersion]);
+  else
+    result := format('%u.0',[AVersion.BDSVersion]);
+  end;
+end;
+
+Function DelphiStudioByDelphiVersion(AVersion: integer): string;
+begin
+  result := '';
+  if AVersion>=14 then
+    result := EMBARCADERO_STUDIO
+  else if AVersion>8 then
+    result := CODEGEAR_STUDIO;
+end;
+
+Function DelphiCompanyByDelphiVersion(AVersion: integer): string;
+begin
+  if AVersion>=14 then
+    result :=   COMPANY_EMBARCADERO
+  else if AVersion>8 then
+    result := COMPANY_CODEGEAR
+  else result := COMPANY_BORLAND;
+end;
+
+Function DelphiEnvVariableByDelphiVersion(AEnvironmentVariable: string; AVersion: integer): string;
+begin
+ result := '';
+  if SameText(AEnvironmentVariable,'BDSCOMMONDIR') then
+    result := DEFAULT_BDSCOMMON
+  else if SameText(AEnvironmentVariable,'BDSUSERDIR') then
+    result := DEFAULT_BDSUSERDIR
+  else if SameText(AEnvironmentVariable,'BDSCOMPANY') then
+     Result := DelphiCompanyByDelphiVersion(AVersion)
+  ;
+end;
 
 Function DelphiIndexByProductName(AProductName: string): integer;
 var
@@ -278,26 +349,37 @@ Function DelphiRegKeyByDelphiVersion(ADelphiVersion: integer): string;
 var
   lKey: string;
   lVersion: Integer;
+  lRegPath : string;
+  Procedure SetRegOverride(ARegPath: string);
+  begin
+    if length(RegistryOverride)=0 then
+      lRegPath := ARegPath
+    else lRegPath := RegistryOverride;
+  end;
 begin
   result := '';
   case ADelphiVersion of
     1 .. 8:
       begin
+        lVersion := 0;
         lKey := BORLAND_KEY;
+        SetRegOverride(REG_DELPHI);
       end;
     9 .. 11:
       begin
         lKey := CODEGEAR_KEY;
+        SetRegOverride(REG_BDS);
         lVersion := BDSVersion(ADelphiVersion);
       end;
   else
     begin
       lKey := EMBARCADERO_KEY;
+      SetRegOverride(REG_BDS);
       lVersion := BDSVersion(ADelphiVersion);
     end;
   end;
 
-  result := format(lKey, [lVersion]);
+  result := includeTrailingBackslash(format(lKey, [lRegpath,lVersion]));
 
 end;
 
@@ -339,6 +421,11 @@ begin
 end;
 
 initialization
+ // check for a registry override;
+ FindCmdLineSwitch('r', RegistryOverride);
+
+
+
 {$IFDEF VER80} DefaultDelphiVersion:=1; {$ENDIF}
 {$IFDEF VER90} DefaultDelphiVersion:=2; {$ENDIF}
 {$IFDEF VER100} DefaultDelphiVersion:=3; {$ENDIF}
@@ -364,6 +451,8 @@ initialization
 {$IFDEF VER300} DefaultDelphiVersion:=23; {$ENDIF}
 {$IFDEF VER310} DefaultDelphiVersion:=24; {$ENDIF}
 {$IFDEF VER320} DefaultDelphiVersion:=25; {$ENDIF}
+
+
 
 
 

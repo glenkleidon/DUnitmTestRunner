@@ -20,7 +20,20 @@ type
 
   TProjectConditions = array of TProjectCondition;
 
+  TGetPropertyValueDelegate = function(APropertyName: string): string of object;
+  IDelphiEnvHandlers = Interface
+    procedure SetProperties(const Value: TStrings);
+    function GetProperties: TStrings;
+    function ExpandPropertyValue(APropertyName: string): string;
+    function ExpandEnvironmentValue(AEnvironmentVariable: string): string;
+    function ReplaceDelphiEnvWithDosEnv(AEnvironmentVariable: string): string;
+    function ExpandDelphiEnvVariables(AText: string): string;
+    property Properties: TStrings read GetProperties write SetProperties;
+  End;
+
   IDelphiProjectProperties = Interface
+    function GetHandlers: IDelphiEnvHandlers;
+    procedure SetHandlers(const Value: IDelphiEnvHandlers);
     function GetProperties: TStrings;
     procedure DoExtraction(ANodeReader: IXMLNodeReader);
     function ConditionIndex(ANode: TXMLNode): Integer;
@@ -28,30 +41,70 @@ type
     procedure ExtractPropertiesFromDProj(AFilename: string);
     procedure ExtractProperties(AText: string);
     property Properties: TStrings read GetProperties;
+    property Handlers: IDelphiEnvHandlers read GetHandlers write SetHandlers;
   End;
+
+  TDelphiEnvHandlers = Class(TInterfacedObject, IDelphiEnvHandlers)
+  private
+    fProperties : TStrings;
+    procedure SetProperties(const Value: TStrings);
+    function GetProperties: TStrings;
+    Function GetPropertyValue(APropertyname: string): string;
+    function GetEnvironmentValue(AEnvironmentVariable: string): string;
+    function GetPropertyOrEnvironmentValue(AName: string): string;
+  public
+    constructor Create;
+    function ExpandPropertyValue(APropertyName: string): string;
+    function ExpandEnvironmentValue(AEnvironmentVariable: string): string;
+    function ExpandPropertyOrEnvironmentValue(AName: string): string;
+    function ReplaceDelphiEnvWithDosEnv(AEnvironmentVariable: string): string;
+    function ExpandDelphiEnvVariables(AText: string): string;
+    property Properties: TStrings read GetProperties write SetProperties;
+  End;
+
 
   TDelphiProjectProperties = Class(TInterfacedObject, IDelphiProjectProperties)
   private
-    fProperties: TStringlist;
+    fEnvironmentHandlers: IDelphiEnvHandlers;
     function GetProperties: TStrings;
     procedure DoExtraction(ANodeReader: IXMLNodeReader);
     function ConditionIndex(ANode: TXMLNode): Integer;
     function ConditionIsMet(ACondition: String): boolean;
+    function GetHandlers: IDelphiEnvHandlers;
+    procedure SetHandlers(const Value: IDelphiEnvHandlers);
   public
     constructor Create;
-    destructor Destroy; override;
     procedure ExtractPropertiesFromDProj(AFilename: string);
     procedure ExtractProperties(AText: string);
     property Properties: TStrings read GetProperties;
+    Property Handlers : IDelphiEnvHandlers read GetHandlers write SetHandlers;
   End;
 
 function ParseCondition(ACondition: string): TProjectConditions;
-function ExpandValue(AValue: string; AProperties: TStrings;
+function ExpandValue(AValue: string; AGetPropertyValue: TGetPropertyValueDelegate;
   AReplaceIfEmpty: boolean = true): string;
+function AppendPath(APath: string; ANewPath: string): string;
 
 implementation
 
-function ExpandValue(AValue: string; AProperties: TStrings;
+/// <summary>
+/// Adds ANewPath to APath separating by ";" if necessary
+/// </summary>
+function AppendPath(APath: string; ANewPath: string): string;
+var
+  lSeparator: string;
+begin
+  result := APath;
+  if length(ANewPath) = 0 then
+    exit;
+  if length(APath) = 0 then
+    lSeparator := ''
+  else
+    lSeparator := ';';
+  result := format('%s%s%s', [APath, lSeparator, ANewPath]);
+end;
+
+function ExpandValue(AValue: string; AGetPropertyValue: TGetPropertyValueDelegate;
   AReplaceIfEmpty: boolean = true): string;
 var
   p, q, sp, ilp: Integer;
@@ -62,7 +115,7 @@ begin
   result := AValue;
   sp := 1;
   repeat
-    llPropertyValue:='';
+    llPropertyValue := '';
     pValue := @result[sp];
     p := pos('$(', pValue);
     if p < 1 then
@@ -71,18 +124,18 @@ begin
     q := pos(')', pValue);
     if q < 1 then
       exit;
-    llPropertyName := copy(result, sp+p + 1, q - 1);
-    llPropertyValue := AProperties.Values[llPropertyName];
-    sp := sp+p;
+    llPropertyName := copy(result, sp + p + 1, q - 1);
+    llPropertyValue := AGetPropertyValue(llPropertyName);
+    sp := sp + p;
     if (AReplaceIfEmpty) or ((not AReplaceIfEmpty) and
       (length(llPropertyValue) > 0)) then
     begin
       result := copy(result, 1, sp - 2) + llPropertyValue +
         copy(result, sp + q + 1, MaxInt);
       // check for infinite loop
-      ilp := pos(format('$(%s)',[llPropertyName]), llPropertyValue);
-      if (ilp>0) then
-        sp := sp + ilp+length(llPropertyValue)+2;
+      ilp := pos(format('$(%s)', [llPropertyName]), llPropertyValue);
+      if (ilp > 0) then
+        sp := sp + ilp + length(llPropertyValue) + 2;
     end;
   until (false);
 end;
@@ -215,7 +268,7 @@ var
   lArgumentOne, lArgumentTwo: string;
   lArgumentResult: boolean;
   lIgnoreGroup: string;
-  lLastIngnoredOperator: TConditionOperator;
+  lLastIgnoredOperator: TConditionOperator;
 
   Function GetArgument(AArgument: string): string;
   var
@@ -262,6 +315,7 @@ begin
   lMaxCondition := length(AConditions) - 1;
   result := false;
   lIgnoreGroup := '';
+  lLastIgnoredOperator:=coNone;
   for i := 0 to lMaxCondition do
   begin
     lCondition := AConditions[i];
@@ -275,25 +329,25 @@ begin
           begin
             if isLastOr(i) then
               exit;
-            lLastIngnoredOperator := coAnd;
+            lLastIgnoredOperator := coAnd;
             continue;
           end;
         coOr:
           begin
-            lLastIngnoredOperator := coOr;
+            lLastIgnoredOperator := coOr;
             continue;
           end;
       else
         begin
           if (result) then
             continue
-          else if lLastIngnoredOperator = coAnd then
+          else if lLastIgnoredOperator = coAnd then
             continue;
         end;
       end;
     end;
     lIgnoreGroup := '';
-    lLastIngnoredOperator := coNone;
+    lLastIgnoredOperator := coNone;
 
     // Check the arguments.
     lArgumentResult := true;
@@ -339,30 +393,24 @@ end;
 
 function TDelphiProjectProperties.ConditionIsMet(ACondition: String): boolean;
 begin
-  result := IsConditionMet(ParseCondition(ACondition), self.fProperties);
+  result := IsConditionMet(ParseCondition(ACondition), self.Properties);
 end;
 
 constructor TDelphiProjectProperties.Create;
 begin
-  self.fProperties := TStringlist.Create;
+  Self.fEnvironmentHandlers := TDelphiEnvHandlers.Create;
 end;
 
-destructor TDelphiProjectProperties.Destroy;
-begin
-  freeandnil(self.fProperties);
-  inherited;
-end;
 
 procedure TDelphiProjectProperties.DoExtraction(ANodeReader: IXMLNodeReader);
 var
   lNode: TXMLNode;
-  lCondition: TXMLAttribute;
-  lPropertyName: string;
 
-  Function SkipToNextNode: boolean;
+  Procedure SkipToNextNode;
   var
     lDepth: Integer;
   begin
+
     lDepth := PathDepth(lNode.Path);
     repeat
       lNode := ANodeReader.NextNode;
@@ -396,13 +444,12 @@ begin
         ;
       // ignore
       3:
-        self.fProperties.Values[lNode.Name] :=
-          ExpandValue(lNode.Value, self.Properties);
+        self.Properties.Values[lNode.Name] :=
+          Handlers.ExpandPropertyValue(lNode.Value);
       4 .. 9999:
         begin
-          self.fProperties.Values[StringReplace(copy(lNode.Path, 2, MaxInt),
-            '/', '.', [rfReplaceAll])] := ExpandValue(lNode.Value,
-            self.Properties);
+          self.Properties.Values[StringReplace(copy(lNode.Path, 2, MaxInt),
+            '/', '.', [rfReplaceAll])] := Handlers.ExpandPropertyvalue(lNode.Value);
         end;
     end;
   end;
@@ -419,9 +466,19 @@ begin
   DoExtraction(TXMLNodeReader.CreateFromFile(AFilename));
 end;
 
+function TDelphiProjectProperties.GetHandlers: IDelphiEnvHandlers;
+begin
+   result := Self.fEnvironmentHandlers;
+end;
+
 function TDelphiProjectProperties.GetProperties: TStrings;
 begin
-  result := TStrings(self.fProperties);
+  result := TStrings(self.fEnvironmentHandlers.Properties);
+end;
+
+procedure TDelphiProjectProperties.SetHandlers(const Value: IDelphiEnvHandlers);
+begin
+  self.fEnvironmentHandlers := Value;
 end;
 
 function TDelphiProjectProperties.ConditionIndex(ANode: TXMLNode): Integer;
@@ -436,6 +493,71 @@ begin
       result := i;
       exit;
     end;
+end;
+
+{ TDelphiEnvVariables }
+
+function TDelphiEnvHandlers.GetEnvironmentValue(
+  AEnvironmentVariable: string): string;
+begin
+ result := GetEnvironmentVariable(AEnvironmentVariable);
+end;
+
+function TDelphiEnvHandlers.GetProperties: TStrings;
+begin
+  result := self.fProperties;
+end;
+
+function TDelphiEnvHandlers.GetPropertyOrEnvironmentValue(
+  AName: string): string;
+begin
+  result := GetPropertyValue(AName);
+  if length(Result)=0 then result := GetEnvironmentValue(AName);
+
+end;
+
+function TDelphiEnvHandlers.GetPropertyValue(APropertyname: string): string;
+begin
+  result := self.fProperties.Values[APropertyname];
+end;
+
+function TDelphiEnvHandlers.ReplaceDelphiEnvWithDosEnv(
+  AEnvironmentVariable: string): string;
+begin
+  result := format('%%%s%%',[AEnvironmentVariable]);
+end;
+
+procedure TDelphiEnvHandlers.SetProperties(const Value: TStrings);
+begin
+  FProperties := Value;
+end;
+
+constructor TDelphiEnvHandlers.Create;
+begin
+  Self.fProperties := TStringlist.Create;
+end;
+
+function TDelphiEnvHandlers.ExpandDelphiEnvVariables(AText: string): string;
+begin
+   result := ExpandValue(Atext, GetPropertyOrEnvironmentValue);
+end;
+
+function TDelphiEnvHandlers.ExpandEnvironmentValue(
+  AEnvironmentVariable: string): string;
+begin
+  result := expandValue(AEnvironmentVariable, GetEnvironmentValue);
+end;
+
+
+function TDelphiEnvHandlers.ExpandPropertyOrEnvironmentValue(
+  AName: string): string;
+begin
+  result := ExpandValue(AName, GetPropertyOrEnvironmentValue);
+end;
+
+function TDelphiEnvHandlers.ExpandPropertyValue(APropertyName: string): string;
+begin
+   result := expandValue(APropertyName, GetPropertyValue);
 end;
 
 end.

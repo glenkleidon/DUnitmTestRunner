@@ -51,7 +51,7 @@ end;
 Procedure SearchFolderForFiles(const AFilter: string;
   const AStartFolder: String; ABuilder: TStringBuilder; AOptions: string = '');
 var
-  lFileSearchRec,lFolderSearchRec: TSearchRec;
+  lFolderSearchRec: TSearchRec;
   lSearchList: TStringlist;
   lSearchStr: String;
   lStartFolder, lSubFolder, lExtension: String;

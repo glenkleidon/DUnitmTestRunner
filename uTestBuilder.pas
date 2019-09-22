@@ -66,7 +66,6 @@ var
   lList: TStringList;
   i: Integer;
   lProject: string;
-  lDelphiVersion: string;
 begin
   result.Init;
   lList := TStringList.Create;

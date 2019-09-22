@@ -31,7 +31,6 @@ uses Classes, DUnitm.Constants, Delphi.Lexer;
 Function ExtractUsesClause(AProjectFile: TStrings;
   AClauseTypes: TUnitClauseTypes): String;
 var
-  lUses: string;
   lImplementationToken: TTokenInfo;
 
 begin

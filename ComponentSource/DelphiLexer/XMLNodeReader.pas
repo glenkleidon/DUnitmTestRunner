@@ -215,12 +215,14 @@ var
   lStream: TFileStream;
   lStringStream: TStringStream;
 begin
+  result := false;
   lStringStream := nil;
   lStream := TFileStream.Create(AFilename, fmOpenRead, fmShareDenyNone);
   try
     lStringStream := TStringStream.Create('');
     lStringStream.CopyFrom(lStream, 0);
     self.fContent := lStringStream.DataString;
+    result := True;
   finally
     freeandnil(lStringStream);
     freeandnil(lStream);
@@ -252,7 +254,6 @@ var
 
   Procedure ShrinkPath;
   var
-    lPath: string;
     p1: integer;
   begin
     p1 := LastDelimiter('/', self.Path);
