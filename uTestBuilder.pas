@@ -63,23 +63,35 @@ end;
 
 function TDUnitmTestBuilder.BuildandRun(ADelphiVersion: string=''): TBuildResult;
 var
-  lList: TStringList;
+  lProjectList, lScript: TStringList;
   i: Integer;
   lProject: string;
+  lTestSection : string;
 begin
   result.Init;
-  lList := TStringList.Create;
+  lScript := TStringlist.Create;
+  lProjectList := TStringList.Create;
   try
-    lList.text := GetTestProjects;
-    for i := 0 to lList.Count - 1 do
+
+
+    lProjectList.text := GetTestProjects;
+    for i := 0 to lProjectList.Count - 1 do
     begin
-     lProject := lList[i];
+     lProject := lProjectList[i];
      if length(lProject)=0 then continue;
-     writeln(Commandline(lProject, ADelphiVersion));
+     lTestSection := lTestSection +
+       Commandline(lProject, ADelphiVersion, DEFAULT_DUNITM_SCRIPT_COMMAND);
     end;
 
+    lScript.Text := stringReplace(DUNITM_TEST_RUNNER_SCRIPT, '<TESTEXECUTION>', lTestSection,[rfIgnoreCase]);
+    lScript.Text := StringReplace(lScript.Text, '<ROOTPATH>', RootFolder, [rfIgnoreCase, rfReplaceAll]);
+
+
+    lScript.SaveToFile(RootFolder + 'Test_Runner.bat');
+
   finally
-    freeandnil(lList);
+    freeandnil(lProjectList);
+    Freeandnil(lScript);
   end;
 
 end;

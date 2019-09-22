@@ -5,12 +5,45 @@ interface
 uses SysUtils, Classes;
 
 const
-  DEFAULT_DUNITM_BUILD_COMMAND = '<DCCPATH>\<DCCEXE> ' + '-$O- -$W+ ' +
+  DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT- <PROJECTNAME>'#13#10 +
+    '@cd <PROJECTDIR>'#13#10;
+
+  DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' + '-$O- -$W+ ' +
     '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
     '-D<CONDITIONALDEFINES> ' + '-E<OUTPUTPATH> ' + '-I<INCLUDESEARCHPATH> ' +
     '-NU<DCUOUTPUTPATH> ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
-    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -V -VN '
-    + '<PROJECTNAME>';
+    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -V -VN ' +
+    '<PROJECTNAME>'#13#10;
+
+  DEFAULT_DUNITM_BUILD_SUFFIX = '@if %ERRORLEVEL% EQU 0 ('#13#10 +
+    ' @ECHO BUILD PASSED: <PROJECTNAME>'#13#10 +
+    ' @"<EXEOUTPUTPATH><PROJECTNAME>.exe" >> %TEST_RESULTS%'#13#10 +
+    ' @if %ERRORLEVEL% NEQ 0 ( SET EXIT_CODE=2 )'#13#10+
+    ') ELSE ('#13#10 +
+    ' @ECHO BUILD FAILED: <PROJECTNAME>>>%TEST_RESULTS%'#13#10 + ' SET EXIT_CODE=1'#13#10 + ')'#13#10;
+
+
+
+  DEFAULT_DUNITM_SCRIPT_COMMAND = DEFAULT_DUNITM_BUILD_PREFIX +
+    DEFAULT_DUNITM_BUILD_COMMAND + DEFAULT_DUNITM_BUILD_SUFFIX;
+
+  DUNITM_TEST_RUNNER_SCRIPT = ':: -- DUNIT M - TEST SCRIPT RUNNER --'#13#10 +
+    ':: SET ENVIRONMENT '#13#10 + '@Echo off'#13#10 + 'SET EXIT_CODE=0'#13#10 +
+    'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
+    ':: EXECUTE TESTS '#13#10 + '<TESTEXECUTION>'#13#10 +
+    '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10+
+    'IF %EXIT_CODE% EQU 0 ('#13#10+
+    ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10+
+    ')'#13#10 +
+    'IF %EXIT_CODE% EQU 1 ('#13#10+
+    ' @echo ONE OR MORE BUILD FAILURE>>%TEST_RESULTS%'#13#10+
+    ')'#13#10 +
+    'IF %EXIT_CODE% EQU 2 ('#13#10+
+    ' @echo ONE OR MORE TEST CASES FAILED>>%TEST_RESULTS%'#13#10+
+    ')'#13#10 +
+    'cd %ROOT%'#13#10+
+    '@exit /b %EXIT_CODE%';
+
   REG_ROOT_DIR = 'RootDir';
   REG_LIBRARY = '\Library';
   REG_VALUE_SEARCHPATH = 'Search Path';
@@ -137,7 +170,8 @@ Type
 
 
   *)
-Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
+Function Commandline(AProjectPath: string; ADelphiVersion: string;
+  ABuildText: string = ''): string;
 
 implementation
 
@@ -213,6 +247,10 @@ function GetFinalCommandLine(ACommand: string; AProject: TDUnitMBuildData;
   AProperties: IDelphiProjectProperties): string;
 begin
   result := ACommand;
+  result := StringReplace(result, '<PROJECTDIR>', AProject.ProjectDir,
+    [rfReplaceAll, rfIgnoreCase]);
+  result := StringReplace(result, '<PROJECTNAME>',
+    ChangeFileExt(AProject.ProjectName, ''), [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCCPATH>', AProject.DCCPath,
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCCEXE>', AProject.DCCExe,
@@ -233,8 +271,13 @@ begin
 
   result := StringReplace(result, '<OUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
+
+  result := StringReplace(result, '<EXEOUTPUTPATH>',
+      includeTrailingPathDelimiter(AProject.OutputPath),[rfIgnoreCase, rfReplaceAll]); // For scripting usually
+
   result := StringReplace(result, '<DCUOUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
+
 
   if not DirectoryExists(AProject.OutputPath) then
     ForceDirectories(AProject.OutputPath);
@@ -354,7 +397,7 @@ var
 begin
   result := AProject;
   AProperties.ExtractPropertiesFromDProj(AProject.ProjectDir + '\' +
-    changefileExt(AProject.ProjectName, '.dproj'));
+    ChangeFileExt(AProject.ProjectName, '.dproj'));
 
   result.ConditionalDefines := AProperties.Properties.Values['DCC_Define'];
   result.TargetPlatform := AProperties.Properties.Values['Platform'];
@@ -396,10 +439,10 @@ begin
   if AVersion.DelphiVersion < 9 then
   begin
     if fileExists(format('%s\%s', [AProject.ProjectDir,
-      changefileExt(AProject.ProjectName, '.dof')])) then
+      ChangeFileExt(AProject.ProjectName, '.dof')])) then
       result := PropertiesFromDOF(AProject, AVersion, AProperties)
     else if fileExists(format('%s\%s', [AProject.ProjectDir,
-      changefileExt(AProject.ProjectName, '.cfg')])) then
+      ChangeFileExt(AProject.ProjectName, '.cfg')])) then
       result := PropertiesFromCFG(AProject, AVersion, AProperties);
   end
   else
@@ -416,17 +459,24 @@ begin
   result := PropertiesFromProject(result, AVersion, AProperties);
 end;
 
-Function Commandline(AProjectPath: string; ADelphiVersion: string): string;
+Function Commandline(AProjectPath: string; ADelphiVersion: string;
+  ABuildText: string = ''): string;
 var
   lProject: TDUnitMBuildData;
   lDelphi: TDelphiVersion;
   lProperties: IDelphiProjectProperties;
+  lBuildText: string;
 begin
   result := '';
+  if (length(ABuildText) = 0) then
+    lBuildText := DEFAULT_DUNITM_BUILD_COMMAND
+  else
+    lBuildText := ABuildText;
+
   lProperties := TDelphiProjectProperties.Create;
   lProject.ProjectDir := ExtractFileDir(AProjectPath);
 
-  lProject.ProjectName := changefileExt(extractFileName(AProjectPath), '.dpr');
+  lProject.ProjectName := ChangeFileExt(extractFileName(AProjectPath), '.dpr');
   lProject.Version := ADelphiVersion;
 
   // Default values - these may get overridden;
@@ -452,8 +502,7 @@ begin
 
   // Set Up the properties from the Project File and Appropriate version registry
   lProject := GetProjectProperties(lProject, lDelphi, lProperties);
-  result := GetFinalCommandLine(DEFAULT_DUNITM_BUILD_COMMAND, lProject,
-    lProperties);
+  result := GetFinalCommandLine(lBuildText, lProject, lProperties);
 end;
 
 end.
