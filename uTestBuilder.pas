@@ -84,10 +84,9 @@ begin
     end;
 
     lScript.Text := stringReplace(DUNITM_TEST_RUNNER_SCRIPT, '<TESTEXECUTION>', lTestSection,[rfIgnoreCase]);
-    lScript.Text := StringReplace(lScript.Text, '<ROOTPATH>', RootFolder, [rfIgnoreCase, rfReplaceAll]);
+    lScript.Text := StringReplace(lScript.Text, '<ROOTPATH>', includeTrailingPathdelimiter(RootFolder), [rfIgnoreCase, rfReplaceAll]);
 
-
-    lScript.SaveToFile(RootFolder + 'Test_Runner.bat');
+    lScript.SaveToFile(includeTrailingPathdelimiter(RootFolder) + 'Test_Runner.bat');
 
   finally
     freeandnil(lProjectList);

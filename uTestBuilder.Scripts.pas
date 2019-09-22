@@ -32,14 +32,14 @@ const
     'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
     ':: EXECUTE TESTS '#13#10 + '<TESTEXECUTION>'#13#10 +
     '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10+
-    'IF %EXIT_CODE% EQU 0 ('#13#10+
-    ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10+
-    ')'#13#10 +
-    'IF %EXIT_CODE% EQU 1 ('#13#10+
-    ' @echo ONE OR MORE BUILD FAILURE>>%TEST_RESULTS%'#13#10+
-    ')'#13#10 +
     'IF %EXIT_CODE% EQU 2 ('#13#10+
     ' @echo ONE OR MORE TEST CASES FAILED>>%TEST_RESULTS%'#13#10+
+    ')'#13#10 +
+    'IF %EXIT_CODE% EQU 1 ('#13#10+
+    ' @echo ONE OR MORE BUILDS FAILED>>%TEST_RESULTS%'#13#10+
+    ')'#13#10 +
+    'IF %EXIT_CODE% EQU 0 ('#13#10+
+    ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10+
     ')'#13#10 +
     'cd %ROOT%'#13#10+
     '@exit /b %EXIT_CODE%';
@@ -247,6 +247,14 @@ function GetFinalCommandLine(ACommand: string; AProject: TDUnitMBuildData;
   AProperties: IDelphiProjectProperties): string;
 begin
   result := ACommand;
+
+  //Check for critical folders
+
+  if length(AProject.OutputPath)=0 then
+    AProject.OutputPath := AProject.ProjectDir+'\TestBin';
+  if length(AProject.DCUOutputPath)=0 then
+    AProject.DCUOutputPath := AProject.ProjectDir+'\TestDCU';
+
   result := StringReplace(result, '<PROJECTDIR>', AProject.ProjectDir,
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<PROJECTNAME>',
@@ -277,7 +285,6 @@ begin
 
   result := StringReplace(result, '<DCUOUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
-
 
   if not DirectoryExists(AProject.OutputPath) then
     ForceDirectories(AProject.OutputPath);
