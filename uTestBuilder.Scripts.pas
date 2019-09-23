@@ -8,12 +8,12 @@ const
   DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT- <PROJECTNAME>'#13#10 +
     '@cd <PROJECTDIR>'#13#10;
 
-  DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' + '-$O- -$W+ ' +
+  DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' + '-$O- -$W+ -$D- -$C+ ' +
     '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
     '-D<CONDITIONALDEFINES> ' + '-E<OUTPUTPATH> ' + '-I<INCLUDESEARCHPATH> ' +
     '-NU<DCUOUTPUTPATH> ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
-    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -V -VN ' +
-    '<PROJECTNAME>'#13#10;
+    '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -VN -W- -H-' +
+    '<CRITICALFLAGS> <PROJECTNAME>'#13#10;
 
   DEFAULT_DUNITM_BUILD_SUFFIX = '@if %ERRORLEVEL% EQU 0 ('#13#10 +
     ' @ECHO BUILD PASSED: <PROJECTNAME>'#13#10 +
@@ -82,6 +82,7 @@ Type
     ProjectDir: string;
     Namespaces: string;
     TargetPlatform: string;
+    CriticalFlags : string;
   End;
 
   {
@@ -427,10 +428,68 @@ begin
 
 end;
 
+Procedure AssignCompilerFlag(var AProject: TDUnitMBuildData; AFlag: string; AValue: string);
+begin
+  if AFlag='A' then
+    AProject.UnitAliases = AValue
+  else if AFlag='E' then
+     AProject.OutputPath := AValue
+  else if (AFlag='N') then
+  begin
+     if copy(AValue,1,1)='0' then
+      AValue := copy(AValue,2,MaxInt);
+     AProject.DCUOutputPath := AValue
+  end else if AFlag='U' then
+     AProject.UnitSearchPath := AValue
+  else if AFlag='I' then
+     AProject.IncludeSearchPath := AValue
+  else if AFlag='O' then
+     AProject.ObjectSearchPath := AValue
+  else if AFlag='R' then
+     AProject.ResourceSearchPath := AValue
+  else if AFlag='D' then
+     AProject.ConditionalDefines := AValue
+  else if AFlag='$M' then
+  begin
+    if (AValue<>'-') and (AValue<>'+') then
+    AProject.CriticalFlags := trim(AProject.CriticalFlags + '-$M'+AValue);
+  end else if pos(' $')>0  then
+    AProject.CriticalFlags := trim(AProject.CriticalFlags + format('-%s%s',[AFlag,AValue]);
+
+
+
+end;
+
 Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
   AProperties: IDelphiProjectProperties): TDUnitMBuildData;
+var
+  lFile : TStringList;
+  i,fl: integer;
+  lValue, lPrefix, lFlag: string;
+
 begin
   result := AProject;
+  lFile := TStringlist.Create;
+  try
+    lFile.LoadFromFile(includetrailingpathDelimiter(AProject.ProjectDir) +
+      changeFileExt(Aproject.ProjectName,'.cfg'));
+    for I := 0 to lFile.Count-1 do
+    begin
+      lValue := lFile[i];
+      if length(lValue)=0 then continue;
+      fl := 2;
+      lPrefix := copy(lValue,2,1);
+      if pos(lPrefix, '$LNW')>0 then fl:= 3;
+      lFlag=copy(lValue,1,fl);
+      lValue := copy(lValue,fl+1,MaxInt);
+
+
+
+    end;
+  finally
+    freeandnil(lFile);
+  end;
+
 end;
 
 Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
