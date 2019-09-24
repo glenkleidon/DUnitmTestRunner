@@ -4,6 +4,14 @@ interface
 
 uses SysUtils;
 
+ {$IFDEF CONDITIONALEXPRESSIONS}
+ {$IF CompilerVersion >= 17.0}
+      {$DEFINE HAS_INLINE}
+      {$DEFINE HAS_HELPERS}
+ {$IFEND}
+ {$ENDIF}
+
+
 Type
 
   TUnitClauseType = (ucDPR, ucInterface, ucImplementation);
@@ -17,13 +25,15 @@ Type
     ProjectBasedCases: string;
   End;
 
+  {$IFDEF HAS_HELPERS}
   TTestProjectInfoHelper = Record Helper for TTestProjectInfo
   public
     Procedure Init;
   End;
+  {$ENDIF}
 
 function GetTestProjectInfo(AProjectFile: string): TTestProjectInfo;
-
+Procedure TestProjectInfoInit(var ATestProjectInfo: TTestProjectInfo);
 implementation
 
 uses Classes, DUnitm.Constants, Delphi.Lexer;
@@ -66,20 +76,27 @@ end;
 
 { TTestProjectInfoHelper }
 
+Procedure TestProjectInfoInit(var ATestProjectInfo: TTestProjectInfo);
+begin
+  ATestProjectInfo.IsTestProject := false;
+  ATestProjectInfo.Titles := '';
+  ATestProjectInfo.ProjectSearchPath := '';
+  ATestProjectInfo.TestUnitList := '';
+  ATestProjectInfo.ProjectBasedCases := '';
+end;
+
+{$IFDEF HAS_HELPERS}
 procedure TTestProjectInfoHelper.Init;
 begin
-  self.IsTestProject := false;
-  self.Titles := '';
-  self.ProjectSearchPath := '';
-  self.TestUnitList := '';
-  self.ProjectBasedCases := '';
+  TestProjectInfoInit(self);
 end;
+{$ENDIF}
 
 function GetTestProjectInfo(AProjectFile: string): TTestProjectInfo;
 var
   lDPRFile: TStringlist;
 begin
-  result.Init;
+  TestProjectInfoInit(result);
 
   if not fileexists(AProjectFile) then
     exit;

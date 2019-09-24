@@ -21,17 +21,26 @@ interface
  {$IFEND}
 {$ENDIF}
 
-uses SysUtils;
+uses SysUtils, Classes;
+
+{$IFNDEF HAS_STRINGBUILDER}
+ Type
+ TStringBuilder = Class(TStringStream)
+ public
+   constructor Create;
+   function ToString: string;
+   Procedure Append(AText: string);
+ end;
+{$ENDIF}
 
 Function SearchFolderForFiles(const AFilter: string; const AStartFolder: String;
   AOptions: string = ''): string; overload;
+
 Procedure SearchFolderForFiles(const AFilter: string;
   const AStartFolder: String; ABuilder: TStringBuilder;
   AOptions: string = ''); overload;
 
 implementation
-
-uses Classes;
 
 Function SearchFolderForFiles(const AFilter: string; const AStartFolder: String;
   AOptions: string = ''): string;
@@ -98,6 +107,23 @@ begin
     freeandnil(lSearchList);
   end;
 
+end;
+
+{ TStringBuilder }
+
+procedure TStringBuilder.Append(AText: string);
+begin
+  self.WriteString(AText);
+end;
+
+constructor TStringBuilder.Create;
+begin
+  inherited Create('');
+end;
+
+function TStringBuilder.ToString: string;
+begin
+  result := Self.DataString;
 end;
 
 end.

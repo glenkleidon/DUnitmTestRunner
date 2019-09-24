@@ -1,6 +1,12 @@
 unit uTestBuilder;
 
 interface
+ {$IFDEF CONDITIONALEXPRESSIONS}
+ {$IF CompilerVersion >= 17.0}
+      {$DEFINE HAS_INLINE}
+      {$DEFINE HAS_HELPERS}
+ {$IFEND}
+ {$ENDIF}
 
 uses SysUtils, Classes;
 
@@ -33,16 +39,18 @@ Type
     Property ProjectList: String read GetProjectList;
     Property RootFolder: String read GetRootFolder write SetRootFolder;
   End;
-
+  {$IFDEF HAS_HELPERS}
   TBuildResultHelper = Record Helper for TBuildResult
   public
     Procedure Init;
   End;
+  {$ENDIF}
 
 var
   TestBuilderRootFolder: string = '';
 
 function ThisTestRunnerProjectName: string;
+Procedure BuildResultInit(var ABuildResult: TBuildREsult);
 
 implementation
 
@@ -50,6 +58,7 @@ uses RecursiveFolderSearch, uTestBuilder.ProjectInfo, uTestBuilder.Scripts;
 
 var
   TestRunnerProjectName: string;
+
 
 function ThisTestRunnerProjectName: string;
 begin
@@ -68,7 +77,7 @@ var
   lProject: string;
   lTestSection : string;
 begin
-  result.Init;
+  BuildResultInit(result);
   lScript := TStringlist.Create;
   lProjectList := TStringList.Create;
   try
@@ -176,16 +185,21 @@ begin
 end;
 
 { TBuildResultHelper }
-
-procedure TBuildResultHelper.Init;
+Procedure BuildResultInit(var ABuildResult: TBuildREsult);
 begin
-  self.ProjectCount := 0;
-  self.TestCount := 0;
-  self.TestPass := 0;
-  self.TestFail := 0;
-  self.TestSkip := 0;
-  self.TestError := 0;
+  ABuildResult.ProjectCount := 0;
+  ABuildResult.TestCount := 0;
+  ABuildResult.TestPass := 0;
+  ABuildResult.TestFail := 0;
+  ABuildResult.TestSkip := 0;
+  ABuildResult.TestError := 0;
 
 end;
+{$IFDEF HAS_HELPERS}
+procedure TBuildResultHelper.Init;
+begin
+  BuildResultInit(self);
+end;
+{$ENDIF}
 
 end.

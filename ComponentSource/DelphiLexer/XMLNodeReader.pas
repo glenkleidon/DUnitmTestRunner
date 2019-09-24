@@ -215,7 +215,6 @@ var
   lStream: TFileStream;
   lStringStream: TStringStream;
 begin
-  result := false;
   lStringStream := nil;
   lStream := TFileStream.Create(AFilename, fmOpenRead, fmShareDenyNone);
   try

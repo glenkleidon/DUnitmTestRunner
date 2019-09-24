@@ -40,6 +40,10 @@ begin
   lExeProject := 'testlexer.dpr';
   checkisTrue(pos(lExeProject, lowercase(CaseBuilder.ProjectList)) > 0);
 
+  NewTest('The D7 Lexer project is in the list');
+  lExeProject := 'testlexerd7.dpr';
+  checkisTrue(pos(lExeProject, lowercase(CaseBuilder.ProjectList)) > 0);
+
 end;
 
 initialization

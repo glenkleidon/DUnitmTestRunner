@@ -1,5 +1,24 @@
 unit Delphi.Lexer;
 
+{$IFDEF VER120} {$DEFINE BEFOREVARIANTS} {$DEFINE BEFORE_INLINE} {$ENDIF}
+{$IFDEF VER130} {$DEFINE BEFOREVARIANTS} {$DEFINE BEFORE_INLINE} {$ENDIF}
+{$IFNDEF BEFOREVARIANTS}
+ {$IFDEF VER140} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER150} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER160} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IFDEF VER170} {$DEFINE BEFORE_INLINE} {$ENDIF}
+ {$IF CompilerVersion >= 17.0}
+      {$DEFINE HAS_INLINE}
+      {$DEFINE HAS_HELPERS}
+ {$IFEND}
+ {$IF CompilerVersion >= 20.0}
+      {$DEFINE HAS_VARUSTRING}
+ {$IFEND}
+ {$IF CompilerVersion >= 23.0}
+      {$DEFINE HAS_VARUSTRING}
+ {$IFEND}
+{$ENDIF}
+
 interface
 
 uses SysUtils, StrUtils;
@@ -35,10 +54,12 @@ Type
     Terminator: string;
     TerminatorType: TDelphiTokenType;
   End;
+  {$IFDEF HAS_HELPERS}
 
   TTokenInfoHelper = Record helper for TTokenInfo
     Procedure Init;
   End;
+  {$ENDIF}
 
 Function NextToken(AText: string; AStartPos: integer = 1): TTokenInfo;
 Function CheckForComment(AText: string; AStartPos: integer = 1): TTokenInfo;
@@ -49,8 +70,19 @@ Function TextBeweenTokens(AStartToken: String;
   AStartTokenType: TDelphiTokenType; AEndToken: String;
   AEndTokenType: TDelphiTokenType; AText: string;
   AEndTokenTerminator: String = ''; AStartPos: integer = 1): String;
+procedure TokenInfoInit(var AInfo: TTokenInfo);
 
 implementation
+
+procedure TokenInfoInit(var AInfo: TTokenInfo);
+begin
+  AInfo.isToken := false;
+  AInfo.TokenType := dtUnknown;
+  AInfo.StartPos := 0;
+  AInfo.EndPos := 0;
+  AInfo.Token := '';
+end;
+
 
 const
   DELPHI_RESERVED_KEYWORDS =
@@ -97,7 +129,11 @@ var
   lPos, i: integer;
   First2Chars: String;
 begin
+  {$IFDEF HAS_HELPERS}
   result.Init;
+  {$ELSE}
+
+  {$ENDIF}
 
   lPos := SkipWhiteSpace(AText, AStartPos);
 
@@ -156,7 +192,7 @@ var
   lInQuote : boolean;
   lToken: string;
 begin
-  result.Init;
+  TokenInfoInit(Result);
 
   // locate the first non whitespace
   lStart := SkipWhiteSpace(AText, AStartPos);
@@ -261,7 +297,7 @@ var
   lToken: TTokenInfo;
   lDoStop, lUseTerminator: boolean;
 begin
-  result.Init;
+  TokenInfoInit(Result);
   lDoStop := length(AStopAt) > 0;
   lSize := length(AText);
   lPos := AStartPos;
@@ -306,14 +342,11 @@ begin
 end;
 
 { TokeInfoHelper }
-
+{$IFDEF HAS_HELPERS}
 procedure TTokenInfoHelper.Init;
 begin
-  self.isToken := false;
-  self.TokenType := dtUnknown;
-  self.StartPos := 0;
-  self.EndPos := 0;
-  self.Token := '';
+  TokenInfoInit(self);
 end;
+{$ENDIF}
 
 end.

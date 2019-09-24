@@ -4,6 +4,14 @@ interface
 
 uses SysUtils;
 
+ {$IFDEF CONDITIONALEXPRESSIONS}
+ {$IF CompilerVersion >= 17.0}
+      {$DEFINE HAS_INLINE}
+      {$DEFINE HAS_HELPERS}
+ {$IFEND}
+ {$ENDIF}
+
+
 type
   TDelphiVersion = Record
     ProductName: string;
@@ -422,7 +430,11 @@ end;
 
 initialization
  // check for a registry override;
+ {$IFDEF HAS_INLINE}
  FindCmdLineSwitch('r', RegistryOverride);
+ {$ELSE}
+    // TODO
+ {$ENDIF}
 
 
 

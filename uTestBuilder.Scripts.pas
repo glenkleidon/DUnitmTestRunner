@@ -8,8 +8,8 @@ const
   DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT- <PROJECTNAME>'#13#10 +
     '@cd <PROJECTDIR>'#13#10;
 
-  DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' + '-$O- -$W+ -$D- -$C+ ' +
-    '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
+  DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' +
+    '-$O- -$W+ -$D- -$C+ ' + '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
     '-D<CONDITIONALDEFINES> ' + '-E<OUTPUTPATH> ' + '-I<INCLUDESEARCHPATH> ' +
     '-NU<DCUOUTPUTPATH> ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
     '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -VN -W- -H-' +
@@ -18,11 +18,9 @@ const
   DEFAULT_DUNITM_BUILD_SUFFIX = '@if %ERRORLEVEL% EQU 0 ('#13#10 +
     ' @ECHO BUILD PASSED: <PROJECTNAME>'#13#10 +
     ' @"<EXEOUTPUTPATH><PROJECTNAME>.exe" >> %TEST_RESULTS%'#13#10 +
-    ' @if %ERRORLEVEL% NEQ 0 ( SET EXIT_CODE=2 )'#13#10+
-    ') ELSE ('#13#10 +
-    ' @ECHO BUILD FAILED: <PROJECTNAME>>>%TEST_RESULTS%'#13#10 + ' SET EXIT_CODE=1'#13#10 + ')'#13#10;
-
-
+    ' @if %ERRORLEVEL% NEQ 0 ( SET EXIT_CODE=2 )'#13#10 + ') ELSE ('#13#10 +
+    ' @ECHO BUILD FAILED: <PROJECTNAME>>>%TEST_RESULTS%'#13#10 +
+    ' SET EXIT_CODE=1'#13#10 + ')'#13#10;
 
   DEFAULT_DUNITM_SCRIPT_COMMAND = DEFAULT_DUNITM_BUILD_PREFIX +
     DEFAULT_DUNITM_BUILD_COMMAND + DEFAULT_DUNITM_BUILD_SUFFIX;
@@ -31,18 +29,13 @@ const
     ':: SET ENVIRONMENT '#13#10 + '@Echo off'#13#10 + 'SET EXIT_CODE=0'#13#10 +
     'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
     ':: EXECUTE TESTS '#13#10 + '<TESTEXECUTION>'#13#10 +
-    '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10+
-    'IF %EXIT_CODE% EQU 2 ('#13#10+
-    ' @echo ONE OR MORE TEST CASES FAILED>>%TEST_RESULTS%'#13#10+
-    ')'#13#10 +
-    'IF %EXIT_CODE% EQU 1 ('#13#10+
-    ' @echo ONE OR MORE BUILDS FAILED>>%TEST_RESULTS%'#13#10+
-    ')'#13#10 +
-    'IF %EXIT_CODE% EQU 0 ('#13#10+
-    ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10+
-    ')'#13#10 +
-    'cd %ROOT%'#13#10+
-    '@exit /b %EXIT_CODE%';
+    '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10 + 'IF %EXIT_CODE% EQU 2 ('#13#10 +
+    ' @echo ONE OR MORE TEST CASES FAILED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
+    'IF %EXIT_CODE% EQU 1 ('#13#10 +
+    ' @echo ONE OR MORE BUILDS FAILED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
+    'IF %EXIT_CODE% EQU 0 ('#13#10 +
+    ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
+    'cd %ROOT%'#13#10 + '@exit /b %EXIT_CODE%';
 
   REG_ROOT_DIR = 'RootDir';
   REG_LIBRARY = '\Library';
@@ -82,7 +75,7 @@ Type
     ProjectDir: string;
     Namespaces: string;
     TargetPlatform: string;
-    CriticalFlags : string;
+    CriticalFlags: string;
   End;
 
   {
@@ -249,12 +242,12 @@ function GetFinalCommandLine(ACommand: string; AProject: TDUnitMBuildData;
 begin
   result := ACommand;
 
-  //Check for critical folders
+  // Check for critical folders
 
-  if length(AProject.OutputPath)=0 then
-    AProject.OutputPath := AProject.ProjectDir+'\TestBin';
-  if length(AProject.DCUOutputPath)=0 then
-    AProject.DCUOutputPath := AProject.ProjectDir+'\TestDCU';
+  if length(AProject.OutputPath) = 0 then
+    AProject.OutputPath := AProject.ProjectDir + '\TestBin';
+  if length(AProject.DCUOutputPath) = 0 then
+    AProject.DCUOutputPath := AProject.ProjectDir + '\TestDCU';
 
   result := StringReplace(result, '<PROJECTDIR>', AProject.ProjectDir,
     [rfReplaceAll, rfIgnoreCase]);
@@ -282,7 +275,8 @@ begin
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
 
   result := StringReplace(result, '<EXEOUTPUTPATH>',
-      includeTrailingPathDelimiter(AProject.OutputPath),[rfIgnoreCase, rfReplaceAll]); // For scripting usually
+    includeTrailingPathDelimiter(AProject.OutputPath),
+    [rfIgnoreCase, rfReplaceAll]); // For scripting usually
 
   result := StringReplace(result, '<DCUOUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
@@ -340,7 +334,7 @@ var
 begin
   result := AProject;
   lRegKey := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
-  if lRegKey.length = 0 then
+  if length(lRegKey) = 0 then
     raise Exception.Create('Registry Path not found for this version');
   lReg := TRegistry.Create;
   lEnvReg := TRegistry.Create;
@@ -428,74 +422,142 @@ begin
 
 end;
 
-Procedure AssignCompilerFlag(var AProject: TDUnitMBuildData; AFlag: string; AValue: string);
+Procedure AssignCompilerFlag(var AProject: TDUnitMBuildData; AFlag: string;
+  AValue: string);
 begin
-  if AFlag='A' then
-    AProject.UnitAliases = AValue
-  else if AFlag='E' then
-     AProject.OutputPath := AValue
-  else if (AFlag='N') then
+  if AFlag = 'A' then
+    AProject.UnitAliases := AValue
+  else if AFlag = 'E' then
+    AProject.OutputPath := AValue
+  else if (AFlag = 'N') then
   begin
-     if copy(AValue,1,1)='0' then
-      AValue := copy(AValue,2,MaxInt);
-     AProject.DCUOutputPath := AValue
-  end else if AFlag='U' then
-     AProject.UnitSearchPath := AValue
-  else if AFlag='I' then
-     AProject.IncludeSearchPath := AValue
-  else if AFlag='O' then
-     AProject.ObjectSearchPath := AValue
-  else if AFlag='R' then
-     AProject.ResourceSearchPath := AValue
-  else if AFlag='D' then
-     AProject.ConditionalDefines := AValue
-  else if AFlag='$M' then
+    if copy(AValue, 1, 1) = '0' then
+      AValue := copy(AValue, 2, MaxInt);
+    AProject.DCUOutputPath := AValue
+  end
+  else if AFlag = 'U' then
+    AProject.UnitSearchPath := AValue
+  else if AFlag = 'I' then
+    AProject.IncludeSearchPath := AValue
+  else if AFlag = 'O' then
+    AProject.ObjectSearchPath := AValue
+  else if AFlag = 'R' then
+    AProject.ResourceSearchPath := AValue
+  else if AFlag = 'D' then
+    AProject.ConditionalDefines := AValue
+  else if AFlag = '$M' then
   begin
-    if (AValue<>'-') and (AValue<>'+') then
-    AProject.CriticalFlags := trim(AProject.CriticalFlags + '-$M'+AValue);
-  end else if pos(' $')>0  then
-    AProject.CriticalFlags := trim(AProject.CriticalFlags + format('-%s%s',[AFlag,AValue]);
-
-
-
+    if (AValue <> '-') and (AValue <> '+') then
+      AProject.CriticalFlags := Trim(AProject.CriticalFlags + '-$M' + AValue);
+  end
+  else if ((copy(AFlag, 1, 1) = '$') and (pos(' ' + AFlag + ' ', ' $C $D') < 1))
+  then
+    AProject.CriticalFlags := Trim(AProject.CriticalFlags + format(' -%s%s',
+      [AFlag, AValue]));
 end;
 
 Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
   AProperties: IDelphiProjectProperties): TDUnitMBuildData;
 var
-  lFile : TStringList;
-  i,fl: integer;
+  lFile: TStringlist;
+  i, fl: integer;
   lValue, lPrefix, lFlag: string;
+begin
+  result := AProject;
+  lFile := TStringlist.Create;
+  try
+    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir) +
+      ChangeFileExt(AProject.ProjectName, '.cfg'));
+    for i := 0 to lFile.Count - 1 do
+    begin
+      lValue := lFile[i];
+      if length(lValue) = 0 then
+        continue;
+      fl := 2;
+      lPrefix := copy(lValue, 2, 1);
+      if pos(lPrefix, '$LNW') > 0 then
+        fl := 3;
+      lFlag := copy(lValue, 1, fl);
+      lValue := copy(lValue, fl + 1, MaxInt);
+      AssignCompilerFlag(result, lFlag, lValue);
+    end;
+  finally
+    freeandnil(lFile);
+  end;
+end;
+
+Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
+  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
+var
+  lFile: TStringlist;
+  i, p, r: integer;
+  lF: boolean;
+  lValue, lPrefix, lFlag: string;
+  lSection: string;
+
+  function SetSection(AValue: string): boolean;
+  begin
+    result := false;
+    if (pos('[', AValue) > 0) and (pos(']', AValue) < 0) then
+    begin
+      result := true;
+      lSection := AValue;
+    end;
+  end;
 
 begin
   result := AProject;
   lFile := TStringlist.Create;
   try
-    lFile.LoadFromFile(includetrailingpathDelimiter(AProject.ProjectDir) +
-      changeFileExt(Aproject.ProjectName,'.cfg'));
-    for I := 0 to lFile.Count-1 do
+    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir) +
+      ChangeFileExt(AProject.ProjectName, '.dof'));
+
+    // Directories and Conditionals
+    Result.UnitAliases := lFile.Values['UnitAliases'];
+    Result.UnitSearchPath := lFile.Values['SearchPath'];
+    result.OutputPath := lFile.Values['OutputDir'];
+    result.ConditionalDefines := lFile.Values['Conditionals'];
+
+    // Flags
+    lFlag := '-K';
+    lValue := lFile.Values['ImageBase'];
+    AssignCompilerFlag(result, lFlag, lValue);
+
+    lFlag := '-$M';
+    lvalue := format('%s;%s',[lFile.Values['MinStackSize'],
+        lFile.Values['MaxStackSize']]);
+    AssignCompilerFlag(result, lFlag, lValue);
+
+    r := lFile.IndexOf('[Compiler]');
+    if r=-1 then exit;
+    for i := 0 to lFile.Count - 1 do
     begin
+      if SetSection(lValue) then continue;
+      if not SameText(lSection, '[Compiler]') then exit;
+      // set the flags
       lValue := lFile[i];
-      if length(lValue)=0 then continue;
-      fl := 2;
-      lPrefix := copy(lValue,2,1);
-      if pos(lPrefix, '$LNW')>0 then fl:= 3;
-      lFlag=copy(lValue,1,fl);
-      lValue := copy(lValue,fl+1,MaxInt);
-
-
-
+      if length(lValue) = 0 then
+        continue;
+      p := pos('=', lValue);
+      if p = 2 then
+      begin
+        lFlag := copy(lValue, 1, 1);
+        lValue := copy(lValue, 3, 1);
+        case lFlag[1] of
+          'A', 'Z':
+            ;
+        else
+          if copy(lValue, 3, 1) = '0' then
+            lValue := '-'
+          else
+            lValue := '+';
+        end;
+        AssignCompilerFlag(result, '-$'+lFlag, lValue);
+      end;
     end;
   finally
     freeandnil(lFile);
   end;
-
-end;
-
-Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
-  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
-begin
-  result := AProject;
 end;
 
 Function PropertiesFromProject(AProject: TDUnitMBuildData;
