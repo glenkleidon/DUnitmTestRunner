@@ -110,7 +110,7 @@ begin
 end;
 
 { TStringBuilder }
-
+{$IFNDEF HAS_STRINGBUILDER}
 procedure TStringBuilder.Append(AText: string);
 begin
   self.WriteString(AText);
@@ -125,5 +125,6 @@ function TStringBuilder.ToString: string;
 begin
   result := Self.DataString;
 end;
+{$ENDIF}
 
 end.

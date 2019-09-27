@@ -7,8 +7,11 @@ uses SysUtils;
  {$IFDEF CONDITIONALEXPRESSIONS}
  {$IF CompilerVersion >= 17.0}
       {$DEFINE HAS_INLINE}
-      {$DEFINE HAS_HELPERS}
  {$IFEND}
+ {$IF CompilerVersion > 21.0}
+      {$DEFINE HAS_RECORD_HELPERS}
+ {$IFEND}
+
  {$ENDIF}
 
 
@@ -114,7 +117,7 @@ procedure DelphiVersionInit(var AVersion: TDelphiVersion);
 var DefaultDelphiVersion : integer;
 var RegistryOverride : string = '';
 
-  {$IFDEF HAS_HELPERS}
+  {$IFDEF HAS_RECORD_HELPERS}
   TDelphiVersionHelper = Record Helper for TDelphiVersion
   public
     Procedure Init;
@@ -455,7 +458,7 @@ begin
   AVersion.DelphiVersion := 0;
 end;
 
-{$IFDEF HAS HELPERS}
+{$IFDEF HAS_RECORD_HELPERS}
 Procedure TDelphiVersionHelper.Init;
 begin
   DelphiVersionInit(Self);
@@ -466,8 +469,6 @@ initialization
  // check for a registry override;
  {$IFDEF HAS_INLINE}
    FindCmdLineSwitch('r', RegistryOverride);
-
-
  {$ELSE}
     // TODO
  {$ENDIF}
