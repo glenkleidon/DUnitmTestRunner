@@ -51,8 +51,8 @@ const
   DEFAULT_BDSUSERDIR  ='$(USERPROFILE)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
   DEFAULT_BDSDCUDIR  = '$(BDSLIB)\$(Platform)\$(Config)';
 
-  MAX_VERSION = 12;
-  MAX_SUPPORTED_VERSION = 12;
+  MAX_VERSION = 23;
+  MAX_SUPPORTED_VERSION = 19;
 
   ALL_DELPHI_VERSIONS: array [0 .. MAX_VERSION] of TDelphiVersion =
     ((ProductName: 'Rio'; ShortName: 'Delphi10.3'; BDSVersion: 20;
@@ -67,9 +67,19 @@ const
     DelphiVersion: 19), (ProductName: 'XE4'; ShortName: 'XE4'; BDSVersion: 11;
     DelphiVersion: 18), (ProductName: 'XE3'; ShortName: 'XE3'; BDSVersion: 10;
     DelphiVersion: 17), (ProductName: 'XE2'; ShortName: 'XE2'; BDSVersion: 9;
-    DelphiVersion: 16), (ProductName: 'XE'; ShortName: 'XE'; BDSVersion: 8;
-    DelphiVersion: 15), (ProductName: '2010'; ShortName: 'D2010'; BDSVersion: 7;
-    DelphiVersion: 14));
+    DelphiVersion: 16), (ProductName: 'XE'; ShortName: 'XE'; BDSVersion: 8; DelphiVersion: 15),
+    (ProductName: '2010'; ShortName: 'D2010'; BDSVersion: 7; DelphiVersion: 14),
+    (ProductName: '2009'; ShortName: 'D2009'; BDSVersion: 6; DelphiVersion: 12),
+    (ProductName: '2007'; ShortName: 'D2007'; BDSVersion: 5; DelphiVersion: 11),
+    (ProductName: '2006'; ShortName: 'D2006'; BDSVersion: 4; DelphiVersion: 10),
+    (ProductName: '2005'; ShortName: 'D2005'; BDSVersion: 3; DelphiVersion: 9),
+    (ProductName: 'Delphi7'; ShortName: 'D7'; BDSVersion: 0; DelphiVersion: 7),
+    (ProductName: 'Delphi6'; ShortName: 'D6'; BDSVersion: 0; DelphiVersion: 6),
+    (ProductName: 'Delphi5'; ShortName: 'D5'; BDSVersion: 0; DelphiVersion: 5),
+    (ProductName: 'Delphi4'; ShortName: 'D4'; BDSVersion: 0; DelphiVersion: 4),
+    (ProductName: 'Delphi3'; ShortName: 'D3'; BDSVersion: 0; DelphiVersion: 3),
+    (ProductName: 'Delphi2'; ShortName: 'D2'; BDSVersion: 0; DelphiVersion: 2),
+    (ProductName: 'Delphi1'; ShortName: 'D1'; BDSVersion: 0; DelphiVersion: 1));
 
 function FindDelphiIndex(ASearchText: string): integer;
 function FindDelphi(ASearchText: string): TDelphiVersion;
@@ -99,8 +109,17 @@ Function DelphiStudioByDelphiVersion(AVersion: integer): string;
 Function DelphiCompanyByDelphiVersion(AVersion: integer): string;
 Function DelphiProductVersion(AVersion : TDelphiVersion): string;
 
+procedure DelphiVersionInit(var AVersion: TDelphiVersion);
+
 var DefaultDelphiVersion : integer;
 var RegistryOverride : string = '';
+
+  {$IFDEF HAS_HELPERS}
+  TDelphiVersionHelper = Record Helper for TDelphiVersion
+  public
+    Procedure Init;
+  End;
+  {$ENDIF}
 
 implementation
 
@@ -428,10 +447,27 @@ begin
     result := DelphiRegKeyByDelphiVersion(ALL_DELPHI_VERSIONS[lIndex].DelphiVersion);
 end;
 
+procedure DelphiVersionInit(var AVersion: TDelphiVersion);
+begin
+  AVersion.ProductName := '';
+  AVersion.ShortName := '';
+  AVersion.BDSVersion := 0;
+  AVersion.DelphiVersion := 0;
+end;
+
+{$IFDEF HAS HELPERS}
+Procedure TDelphiVersionHelper.Init;
+begin
+  DelphiVersionInit(Self);
+end;
+{$ENDIF}
+
 initialization
  // check for a registry override;
  {$IFDEF HAS_INLINE}
- FindCmdLineSwitch('r', RegistryOverride);
+   FindCmdLineSwitch('r', RegistryOverride);
+
+
  {$ELSE}
     // TODO
  {$ENDIF}

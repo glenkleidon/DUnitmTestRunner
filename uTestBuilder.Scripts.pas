@@ -596,6 +596,9 @@ var
   lBuildText: string;
 begin
   result := '';
+
+  DelphiVersionInit(lDelphi);
+
   if (length(ABuildText) = 0) then
     lBuildText := DEFAULT_DUNITM_BUILD_COMMAND
   else
