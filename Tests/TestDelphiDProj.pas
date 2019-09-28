@@ -48,6 +48,37 @@ const
     '  </PropertyGroup>' +
     '</Project>';
 
+    TEST_DATA_CODEGEAR =
+'<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">'#13#10 +
+'   <PropertyGroup>'#13#10 +
+'     <ProjectGuid>{3a69068d-5302-4e16-8bfa-ff307b34a7ad}</ProjectGuid>'#13#10 +
+'     <MainSource>TestLexer.dpr</MainSource>'#13#10 +
+'     <Configuration Condition=" `$(Configuration)` == `` ">Debug</Configuration>'#13#10 +
+'     <Platform Condition=" `$(Platform)` == `` ">AnyCPU</Platform>'#13#10 +
+'     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>'#13#10 +
+'     <DCC_DependencyCheckOutputName>win32\debug\TestLexer.exe</DCC_DependencyCheckOutputName>'#13#10 +
+'   </PropertyGroup>'#13#10 +
+'   <PropertyGroup Condition=" `$(Configuration)|$(Platform)` == `Release|AnyCPU` ">'#13#10 +
+'     <Version>7.0</Version>'#13#10 +
+'     <DCC_DebugInformation>False</DCC_DebugInformation>'#13#10 +
+'     <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>'#13#10 +
+'     <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>'#13#10 +
+'     <DCC_Define>RELEASE</DCC_Define>'#13#10 +
+'   </PropertyGroup>'#13#10 +
+'   <PropertyGroup Condition=" `$(Configuration)|$(Platform)` == `Debug|AnyCPU` ">'#13#10 +
+'     <Version>7.0</Version>'#13#10 +
+'     <DCC_Define>DEBUG</DCC_Define>'#13#10 +
+'     <DCC_ExeOutput>.\win32\debug</DCC_ExeOutput>'#13#10 +
+'     <DCC_DcuOutput>.\win32\debug\dcus</DCC_DcuOutput>'#13#10 +
+'     <DCC_ObjOutput>.\win32\debug\dcus</DCC_ObjOutput>'#13#10 +
+'     <DCC_HppOutput>.\win32\debug\dcus</DCC_HppOutput>'#13#10 +
+'     <DCC_UnitSearchPath>..\;..\ComponentSource\DUnitm;..\ComponentSource\\DelphiLexer</DCC_UnitSearchPath>'#13#10 +
+'     <DCC_ResourcePath>..\;..\ComponentSource\DUnitm;..\ComponentSource\\DelphiLexer</DCC_ResourcePath>'#13#10 +
+'     <DCC_ObjPath>..\;..\ComponentSource\DUnitm;..\ComponentSource\\DelphiLexer</DCC_ObjPath>'#13#10 +
+'     <DCC_IncludePath>..\;..\ComponentSource\DUnitm;..\ComponentSource\\DelphiLexer</DCC_IncludePath>'#13#10 +
+'   </PropertyGroup>'#13#10 +
+'   <ProjectExtensions>';
+
 
 implementation
 
@@ -590,6 +621,29 @@ begin
 
 end;
 
+Procedure CodeGear_Properties_are_set_as_expected;
+var
+  lProject: IDelphiProjectProperties;
+  lExpected: string;
+begin
+  lProject := TDelphiProjectProperties.Create;
+  lProject.ExtractProperties(RemovebackTicks(TEST_DATA_CODEGEAR));
+
+  NewTest('Version');
+  CheckIsEqual('7.0', lProject.Properties.Values['Version']);
+
+  NewTest('Platform');
+  CheckIsEqual('AnyCPU', lProject.Properties.Values['Platform']);
+
+  NewTest('Defines');
+  CheckIsEqual('DEBUG', lProject.Properties.Values['DCC_DEFINE']);
+
+  NewTest('Search Path');
+  lExpected := '..\;..\ComponentSource\DUnitm;..\ComponentSource\\DelphiLexer';
+  CheckIsEqual(lExpected, lProject.Properties.Values['DCC_UnitSearchPath']);
+
+end;
+
 initialization
 
 NewSet('XML Node Reader');
@@ -616,6 +670,7 @@ AddTestCase('Test Parse Simple Conditions', Simple_Conditions_Parse_Correctly);
 AddTestCase('Test Conditions are Met level 0', ConditionsAreMet_Level_0_Works_Correctly);
 AddTestCase('Test Conditions are Met level 1', ConditionsAreMet_Level_1_Works_Correctly);
 AddTestCase('Test Properties are populated', Properties_are_set_as_expected);
+AddTestCase('Test Codegear Variant', CodeGear_Properties_are_set_as_expected);
 FinaliseSet(Finalise);
 
 finalization

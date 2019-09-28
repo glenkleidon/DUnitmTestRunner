@@ -5,21 +5,33 @@ interface
 uses SysUtils, Classes;
 
 const
-  DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT- <PROJECTNAME>'#13#10 +
-    '@cd <PROJECTDIR>'#13#10;
+  DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT: <PROJECTNAME>'#13#10 +
+    '@cd "<PROJECTDIR>"'#13#10+
+    '@ECHO ------------------------------------------------------------------'#13#10+
+    '@ECHO PROJECT <PROJECTNAME> Building...'#13#10+
+    '@ECHO PROJECT <PROJECTNAME> Building...>>%TEST_RESULTS%'#13#10;
 
   DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' +
     '-$O- -$W+ -$D- -$C+ ' + '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
-    '-D<CONDITIONALDEFINES> ' + '-E<OUTPUTPATH> ' + '-I<INCLUDESEARCHPATH> ' +
-    '-NU<DCUOUTPUTPATH> ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
+    '-D<CONDITIONALDEFINES> ' + '-E"<OUTPUTPATH>" ' + '-I<INCLUDESEARCHPATH> ' +
+    '<SWITCH_DCUPATH>"<DCUOUTPUTPATH>" ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
     '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -VN -W- -H-' +
-    '<CRITICALFLAGS> <PROJECTNAME>'#13#10;
+    '<CRITICALFLAGS> <PROJECTNAME> >>%TEST_RESULTS%'#13#10;
 
   DEFAULT_DUNITM_BUILD_SUFFIX = '@if %ERRORLEVEL% EQU 0 ('#13#10 +
-    ' @ECHO BUILD PASSED: <PROJECTNAME>'#13#10 +
+    ' @ECHO BUILD OK.'#13#10 +
+    ' @ECHO BUILD OK.>>%TEST_RESULTS%'#13#10 +
     ' @"<EXEOUTPUTPATH><PROJECTNAME>.exe" >> %TEST_RESULTS%'#13#10 +
-    ' @if %ERRORLEVEL% NEQ 0 ( SET EXIT_CODE=2 )'#13#10 + ') ELSE ('#13#10 +
-    ' @ECHO BUILD FAILED: <PROJECTNAME>>>%TEST_RESULTS%'#13#10 +
+    ' @if %ERRORLEVEL% EQU 0 (' +
+    '  @ECHO ALL <PROJECTNAME> TESTS PASSED '#13#10 +
+    '  @ECHO ALL <PROJECTNAME> TESTS PASSED>>%TEST_RESULTS%'#13#10 +
+    ' ) else ('#13#10 +
+    '  SET EXIT_CODE=2'#13#10 +
+    '  @ECHO Tests for <PROJECTNAME> FAILED! '#13#10 +
+    '  @ECHO Tests for <PROJECTNAME> FAILED!>>%TEST_RESULTS%'#13#10 +
+    ')'#13#10 + ') ELSE ('#13#10 +
+    ' @ECHO BUILD FAILED!'#13#10 +
+    ' @ECHO BUILD FAILED!>>%TEST_RESULTS%'#13#10 +
     ' SET EXIT_CODE=1'#13#10 + ')'#13#10;
 
   DEFAULT_DUNITM_SCRIPT_COMMAND = DEFAULT_DUNITM_BUILD_PREFIX +
@@ -27,10 +39,12 @@ const
 
   DUNITM_TEST_RUNNER_SCRIPT = ':: -- DUNIT M - TEST SCRIPT RUNNER --'#13#10 +
     ':: SET ENVIRONMENT '#13#10 + '@Echo off'#13#10 + 'SET EXIT_CODE=0'#13#10 +
-    'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
+    'SET ROOT=%cd%'#13#10+  'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
+    '@echo ==== DUNITm TEST RUN Time: %DATE:~-4%-%DATE:~4,2%-%DATE:~7,2% ==== >%TEST_RESULTS%'#13#10+
     ':: EXECUTE TESTS '#13#10 + '<TESTEXECUTION>'#13#10 +
     '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10 + 'IF %EXIT_CODE% EQU 2 ('#13#10 +
     ' @echo ONE OR MORE TEST CASES FAILED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
+    '@ECHO =================================================================='#13#10 +
     'IF %EXIT_CODE% EQU 1 ('#13#10 +
     ' @echo ONE OR MORE BUILDS FAILED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
     'IF %EXIT_CODE% EQU 0 ('#13#10 +
@@ -43,6 +57,7 @@ const
   REG_WIN32 = '\Win32';
   REG_WIN64 = '\Win64';
 
+  PLATFORM_ANYCPU = 'AnyCPU';
   PLATFORM_WIN32 = 'Win32';
   PLATFORM_WIN64 = 'Win64';
   PLATFORM_OSX32 = 'OSX32';
@@ -278,6 +293,9 @@ begin
     includeTrailingPathDelimiter(AProject.OutputPath),
     [rfIgnoreCase, rfReplaceAll]); // For scripting usually
 
+  result := StringReplace(result, '<SWITCH_DCUPATH>',
+    Aproperties.properties.Values['SWITCH_DCUPATH'],
+      [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCUOUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
 
@@ -289,6 +307,7 @@ begin
   // Expand the Search Paths
   AProject.UnitSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
     (AppendPath(AProject.UnitSearchPath, DEFAULT_BDSDCUDIR));
+
   AProject.IncludeSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
     (AProject.IncludeSearchPath);
   AProject.ResourceSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
@@ -320,6 +339,9 @@ begin
   result := StringReplace(result, '<PROJECTNAME>', AProject.ProjectName,
     [rfIgnoreCase]);
 
+  result := StringReplace(result, '<CRITICALFLAGS>', AProject.CriticalFlags,
+    [rfIgnoreCase]);
+
   result := AProperties.Handlers.ExpandDelphiEnvVariables(result);
 end;
 
@@ -327,13 +349,23 @@ Function PropertiesFromRegistry(AProject: TDUnitMBuildData;
   AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
   : TDUnitMBuildData;
 var
-  lRegKey: String;
+  lRegKey, lAltRegKey: String;
+  lRegKeys : TStringlist;
   lCurrentKey: string;
   lReg, lEnvReg: TRegistry;
   lRoot: string;
 begin
   result := AProject;
-  lRegKey := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
+  lRegKeys := TStringlist.create;
+  try
+    lRegKeys.text := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
+    lRegKey := lRegKeys[0];
+    if lRegKeys.count>1 then
+      lAltRegKey := lRegKeys[1];
+  finally
+    freeandnil(lRegKeys);
+  end;
+
   if length(lRegKey) = 0 then
     raise Exception.Create('Registry Path not found for this version');
   lReg := TRegistry.Create;
@@ -341,11 +373,14 @@ begin
   try
     lReg.RootKey := HKEY_CURRENT_USER;
     lEnvReg.RootKey := HKEY_CURRENT_USER;
-    lReg.OpenKeyReadOnly(lRegKey);
-    lEnvReg.OpenKeyReadOnly(lRegKey + DELPHI_ENV_OVERRIDES);
+    if not (lReg.OpenKeyReadOnly(lRegKey)) then
+      if lReg.OpenKeyReadOnly(lAltRegKey) then
+        lRegKey := lAltRegKey;
     if not lReg.ValueExists(REG_ROOT_DIR) then
       raise Exception.CreateFmt('Delphi %s not installed correctly',
         [AVersion.ProductName]);
+
+    lEnvReg.OpenKeyReadOnly(lRegKey + DELPHI_ENV_OVERRIDES);
 
     // Root Folder for Delphi
     if lEnvReg.ValueExists(REG_BDS) then
@@ -403,6 +438,8 @@ begin
 
   result.ConditionalDefines := AProperties.Properties.Values['DCC_Define'];
   result.TargetPlatform := AProperties.Properties.Values['Platform'];
+  if sameText(Result.TargetPlatform,PLATFORM_ANYCPU) then
+      Result.TargetPlatform := PLATFORM_WIN32;
   result.UnitAliases := AProperties.Properties.Values['DCC_UnitAlias'];
   result.DCUOutputPath := AProperties.Properties.Values['DCC_DcuOutput'];
   result.OutputPath := AProperties.Properties.Values['DCC_ExeOutput'];
@@ -630,7 +667,7 @@ begin
   lProperties.Properties.Values[ENV_BDSUSERDIR] := DEFAULT_BDSUSERDIR;
   lProperties.Properties.Values[ENV_BDSCOMPANY] :=
     DelphiCompanyByDelphiVersion(lDelphi.DelphiVersion);
-
+  lProperties.Properties.Add(VersionSpecificCompilerSwitches(lDelphi));
   // Set Up the properties from the Project File and Appropriate version registry
   lProject := GetProjectProperties(lProject, lDelphi, lProperties);
   result := GetFinalCommandLine(lBuildText, lProject, lProperties);

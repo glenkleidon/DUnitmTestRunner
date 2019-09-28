@@ -39,6 +39,7 @@ Type
     Property ProjectList: String read GetProjectList;
     Property RootFolder: String read GetRootFolder write SetRootFolder;
   End;
+
   {$IFDEF HAS_HELPERS}
   TBuildResultHelper = Record Helper for TBuildResult
   public
@@ -48,6 +49,7 @@ Type
 
 var
   TestBuilderRootFolder: string = '';
+  TestBuilderProject : string = '';
 
 function ThisTestRunnerProjectName: string;
 Procedure BuildResultInit(var ABuildResult: TBuildREsult);
@@ -76,18 +78,18 @@ var
   i: Integer;
   lProject: string;
   lTestSection : string;
+  lBuilderName: string;
 begin
   BuildResultInit(result);
   lScript := TStringlist.Create;
   lProjectList := TStringList.Create;
   try
-
-
     lProjectList.text := GetTestProjects;
     for i := 0 to lProjectList.Count - 1 do
     begin
      lProject := lProjectList[i];
-     if length(lProject)=0 then continue;
+     if (length(lProject)=0) or
+        (sameText(ExtractFileName(lProject), TestBuilderProject)) then continue;
      lTestSection := lTestSection +
        Commandline(lProject, ADelphiVersion, DEFAULT_DUNITM_SCRIPT_COMMAND);
     end;
@@ -96,7 +98,6 @@ begin
     lScript.Text := StringReplace(lScript.Text, '<ROOTPATH>', includeTrailingPathdelimiter(RootFolder), [rfIgnoreCase, rfReplaceAll]);
 
     lScript.SaveToFile(includeTrailingPathdelimiter(RootFolder) + 'Test_Runner.bat');
-
   finally
     freeandnil(lProjectList);
     Freeandnil(lScript);
@@ -201,5 +202,9 @@ begin
   BuildResultInit(self);
 end;
 {$ENDIF}
+
+initialization
+ TestBuilderProject := ChangeFileExt(ExtractFileName(Paramstr(0)),'.dpr');
+
 
 end.

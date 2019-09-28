@@ -7,11 +7,12 @@ uses SysUtils;
  {$IFDEF CONDITIONALEXPRESSIONS}
  {$IF CompilerVersion >= 17.0}
       {$DEFINE HAS_INLINE}
- {$IFEND}
- {$IF CompilerVersion > 21.0}
       {$DEFINE HAS_RECORD_HELPERS}
  {$IFEND}
-
+ {$IF CompilerVersion >= 23.0}
+      {$DEFINE }
+      {$DEFINE HAS_RECORD_HELPERS}
+ {$IFEND}
  {$ENDIF}
 
 
@@ -22,6 +23,13 @@ type
     BDSVersion: integer;
     DelphiVersion: integer;
   End;
+
+  {$IFDEF HAS_RECORD_HELPERS}
+  TDelphiVersionHelper = Record Helper for TDelphiVersion
+  public
+    Procedure Init;
+  End;
+  {$ENDIF}
 
 const
   REG_BDS = 'BDS';
@@ -52,7 +60,11 @@ const
 
   DEFAULT_BDSCOMMON = '$(Public)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
   DEFAULT_BDSUSERDIR  ='$(USERPROFILE)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
-  DEFAULT_BDSDCUDIR  = '$(BDSLIB)\$(Platform)\$(Config)';
+ {$IF CompilerVersion >= 23.0}
+      DEFAULT_BDSDCUDIR  = '$(BDSLIB)\$(Platform)\$(Config)';
+ {$ELSE}
+      DEFAULT_BDSDCUDIR  = '$(BDSLIB)';
+ {$IFEND}
 
   MAX_VERSION = 23;
   MAX_SUPPORTED_VERSION = 19;
@@ -111,18 +123,13 @@ Function DelphiEnvVariableByDelphiVersion(AEnvironmentVariable: string; AVersion
 Function DelphiStudioByDelphiVersion(AVersion: integer): string;
 Function DelphiCompanyByDelphiVersion(AVersion: integer): string;
 Function DelphiProductVersion(AVersion : TDelphiVersion): string;
+Function VersionSpecificCompilerSwitches(AVersion: TDelphiVersion): string;
 
 procedure DelphiVersionInit(var AVersion: TDelphiVersion);
 
 var DefaultDelphiVersion : integer;
 var RegistryOverride : string = '';
 
-  {$IFDEF HAS_RECORD_HELPERS}
-  TDelphiVersionHelper = Record Helper for TDelphiVersion
-  public
-    Procedure Init;
-  End;
-  {$ENDIF}
 
 implementation
 
@@ -389,13 +396,26 @@ var
 begin
   result := '';
   case ADelphiVersion of
-    1 .. 8:
+    1 .. 10:
       begin
         lVersion := 0;
         lKey := BORLAND_KEY;
         SetRegOverride(REG_DELPHI);
       end;
-    9 .. 11:
+    // Delphi 2007 had two alternatives BDS/5.0 and CodeGear/5.0
+    11:
+      begin
+        lKey := BORLAND_KEY;
+        SetRegOverride(REG_BDS);
+        lVersion := BDSVersion(ADelphiVersion);
+        result := includeTrailingPathDelimiter(format(lKey, [lRegpath,lVersion]));
+        lKey := CODEGEAR_KEY;
+        SetRegOverride(REG_BDS);
+        result := result + #13#10 +
+           includeTrailingPathDelimiter(format(lKey, [lRegpath,lVersion]));
+        exit;
+      end;
+    12:
       begin
         lKey := CODEGEAR_KEY;
         SetRegOverride(REG_BDS);
@@ -409,7 +429,7 @@ begin
     end;
   end;
 
-  result := includeTrailingBackslash(format(lKey, [lRegpath,lVersion]));
+  result := includeTrailingPathDelimiter(format(lKey, [lRegpath,lVersion]));
 
 end;
 
@@ -458,17 +478,42 @@ begin
   AVersion.DelphiVersion := 0;
 end;
 
-{$IFDEF HAS_RECORD_HELPERS}
+Function VersionSpecificCompilerSwitches(AVersion: TDelphiVersion): string;
+var
+  lSwitchValue: string;
+
+  Procedure AddSwitch(Aname: string; AValue : string);
+  var lCr: string;
+  begin
+    if length(result)>0 then lCr := #13#10 else lCr := '';
+    result := Result + format('%sSWITCH_DCUPATH=%s',[lCr, lSwitchValue]);
+  end;
+
+begin
+  result := '';
+  // the DCU OUTPUT Path Switch;
+  case AVersion.DelphiVersion of
+    1..7: lSwitchValue := '-N';
+    8..18: lSwitchValue := '-N0';
+  else
+    lSwitchValue := '-NU';
+  end;
+  AddSwitch('SWITCH_DCUPATH', lSwitchValue);
+  // Add others here.
+
+end;
+
+{.$IFDEF HAS_RECORD_HELPERS}
 Procedure TDelphiVersionHelper.Init;
 begin
   DelphiVersionInit(Self);
 end;
-{$ENDIF}
+{.$ENDIF}
 
 initialization
  // check for a registry override;
  {$IFDEF HAS_INLINE}
-   FindCmdLineSwitch('r', RegistryOverride);
+  //FindCmdLineSwitch('r', RegistryOverride);
  {$ELSE}
     // TODO
  {$ENDIF}

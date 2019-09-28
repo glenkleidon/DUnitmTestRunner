@@ -113,6 +113,7 @@ var
   llPropertyValue: string;
 begin
   result := AValue;
+  if length(result)<1 then exit;
   sp := 1;
   repeat
     llPropertyValue := '';
@@ -137,7 +138,7 @@ begin
       if (ilp > 0) then
         sp := sp + ilp + length(llPropertyValue) + 2;
     end;
-  until (false);
+  until (sp>length(Result));
 end;
 
 function ParseCondition(ACondition: string): TProjectConditions;
@@ -269,12 +270,14 @@ var
   lArgumentResult: boolean;
   lIgnoreGroup: string;
   lLastIgnoredOperator: TConditionOperator;
+  lArgumentHandlers : IDelphiEnvHandlers;
 
   Function GetArgument(AArgument: string): string;
   var
     lArgument: string;
   begin
-    if copy(AArgument, 1, 2) = '$(' then
+    result := lArgumentHandlers.ExpandPropertyValue(AArgument);
+   { if copy(AArgument, 1, 2) = '$(' then
     begin
       lArgument := copy(AArgument, 3, length(AArgument) - 3);
       result := AProperties.Values[lArgument];
@@ -284,7 +287,7 @@ var
     else
     begin
       result := AArgument;
-    end;
+    end; }
   end;
 
   Function isLastOperator(AIndex: Integer;
@@ -312,80 +315,86 @@ var
   end;
 
 begin
-  lMaxCondition := length(AConditions) - 1;
-  result := false;
-  lIgnoreGroup := '';
-  lLastIgnoredOperator:=coNone;
-  for i := 0 to lMaxCondition do
-  begin
-    lCondition := AConditions[i];
-
-    // If at least one Argument has failed in this group, but there are more OR
-    // conditions to be assessed.
-    if (lCondition.Group = lIgnoreGroup) then
+  lArgumentHandlers := TDelphiEnvHandlers.Create ;
+  lArgumentHandlers.properties:= AProperties;
+  try
+    lMaxCondition := length(AConditions) - 1;
+    result := false;
+    lIgnoreGroup := '';
+    lLastIgnoredOperator:=coNone;
+    for i := 0 to lMaxCondition do
     begin
-      case lCondition.ConditionalOperator of
-        coAnd:
+      lCondition := AConditions[i];
+
+      // If at least one Argument has failed in this group, but there are more OR
+      // conditions to be assessed.
+      if (lCondition.Group = lIgnoreGroup) then
+      begin
+        case lCondition.ConditionalOperator of
+          coAnd:
+            begin
+              if isLastOr(i) then
+                exit;
+              lLastIgnoredOperator := coAnd;
+              continue;
+            end;
+          coOr:
+            begin
+              lLastIgnoredOperator := coOr;
+              continue;
+            end;
+        else
           begin
-            if isLastOr(i) then
-              exit;
-            lLastIgnoredOperator := coAnd;
-            continue;
+            if (result) then
+              continue
+            else if lLastIgnoredOperator = coAnd then
+              continue;
           end;
-        coOr:
-          begin
-            lLastIgnoredOperator := coOr;
-            continue;
-          end;
-      else
-        begin
-          if (result) then
-            continue
-          else if lLastIgnoredOperator = coAnd then
-            continue;
         end;
       end;
-    end;
-    lIgnoreGroup := '';
-    lLastIgnoredOperator := coNone;
+      lIgnoreGroup := '';
+      lLastIgnoredOperator := coNone;
 
-    // Check the arguments.
-    lArgumentResult := true;
-    lArgumentOne := GetArgument(lCondition.FirstArgument);
-    lArgumentTwo := GetArgument(lCondition.SecondArgument);
-    case lCondition.ConditionalOperator of
-      coEquals:
-        lArgumentResult := sameText(lArgumentOne, lArgumentTwo);
-      coNotEquals:
-        lArgumentResult := not sameText(lArgumentOne, lArgumentTwo);
-      coExists:
-        lArgumentResult := length(lArgumentOne) > 0;
-      coAnd:
-        // if we aren't true here, then the condition fails immediately
-        if (not result) then
-          exit;
-      coOr:
-        if (result) then
-        begin
-          if isLastAnd(i) then
-            exit
-          else
+      // Check the arguments.
+      lArgumentResult := true;
+      lArgumentOne := GetArgument(lCondition.FirstArgument);
+      lArgumentTwo := GetArgument(lCondition.SecondArgument);
+      case lCondition.ConditionalOperator of
+        coEquals:
+          lArgumentResult := sameText(lArgumentOne, lArgumentTwo);
+        coNotEquals:
+          lArgumentResult := not sameText(lArgumentOne, lArgumentTwo);
+        coExists:
+          lArgumentResult := length(lArgumentOne) > 0;
+        coAnd:
+          // if we aren't true here, then the condition fails immediately
+          if (not result) then
+            exit;
+        coOr:
+          if (result) then
           begin
-            // its ok to ignore this group because the previous is already
-            // true
-            lIgnoreGroup := lCondition.Group;
-            continue;
+            if isLastAnd(i) then
+              exit
+            else
+            begin
+              // its ok to ignore this group because the previous is already
+              // true
+              lIgnoreGroup := lCondition.Group;
+              continue;
+            end;
           end;
-        end;
+      end;
+      result := lArgumentResult;
+      if (not result) then
+      begin
+        if isLastOr(i) then
+          exit
+        else
+          lIgnoreGroup := lCondition.Group;
+      end;
     end;
-    result := lArgumentResult;
-    if (not result) then
-    begin
-      if isLastOr(i) then
-        exit
-      else
-        lIgnoreGroup := lCondition.Group;
-    end;
+  finally
+    lArgumentHandlers.properties := nil;
   end;
 end;
 
@@ -424,8 +433,7 @@ var
   begin
     result := true;
     lIndex := ConditionIndex(lNode);
-    if (lIndex >= 0) and (not ConditionIsMet(lNode.Attributes[lIndex].Value))
-    then
+    if (lIndex >= 0) and (not ConditionIsMet(lNode.Attributes[lIndex].Value)) then
     begin
       SkipToNextNode;
       result := NodeIsRelevant;

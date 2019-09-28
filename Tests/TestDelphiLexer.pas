@@ -42,6 +42,9 @@ const
 
 
 
+
+
+
   TEST_DATA_COMMENT_BRACE_WITHIN_BRACKETSTAR = 'library DummyTestDLL' + CR +
     '  (*' + '    This is a comment with a second {redundant comment}' + CR +
     '    inside it' + CR + '*)';

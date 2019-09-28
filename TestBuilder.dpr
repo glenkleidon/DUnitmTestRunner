@@ -15,7 +15,8 @@ uses
   uTestBuilder.Scripts in 'uTestBuilder.Scripts.pas',
   Delphi.Versions in 'ComponentSource\DelphiLexer\Delphi.Versions.pas',
   Delphi.DProj in 'ComponentSource\DelphiLexer\Delphi.DProj.pas',
-  XMLNodeReader in 'ComponentSource\DelphiLexer\XMLNodeReader.pas';
+  XMLNodeReader in 'ComponentSource\DelphiLexer\XMLNodeReader.pas',
+  TestDelphiDProj in 'Tests\TestDelphiDProj.pas';
 
 var lStartFolder: string;
 begin

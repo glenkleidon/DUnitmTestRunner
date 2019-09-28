@@ -264,6 +264,18 @@ begin
   l := length(fContent);
   result := ResetXMLNode;
   lFirstOrCloseNode := true;
+
+  // Skip over the prefix.
+  if (Position=1) then
+  begin
+    p := pos('<?', copy(fContent,1,100));
+    if p>0 then
+    begin
+      q := pos('>', fContent);
+      fPosition := q+1;
+    end;
+  end;
+
   while lFirstOrCloseNode do
   begin
     pContent := @self.fContent[Position];
