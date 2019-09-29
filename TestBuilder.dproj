@@ -1,0 +1,313 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{4dfc0eb1-e5b7-4aad-ac43-5caff31d93b7}</ProjectGuid>
+        <MainSource>TestBuilder.dpr</MainSource>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+        <DCC_DependencyCheckOutputName>win32\debug\TestBuilder.exe</DCC_DependencyCheckOutputName>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Console</AppType>
+        <FrameworkType>None</FrameworkType>
+        <ProjectVersion>16.1</ProjectVersion>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
+        <SanitizedProjectName>TestBuilder</SanitizedProjectName>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>3081</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>TestBuilder_Icon1.ico</Icon_MainIcon>
+        <Debugger_RunParams>..\..\</Debugger_RunParams>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <Icon_MainIcon>TestBuilder_Icon1.ico</Icon_MainIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <Version>7.0</Version>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <Version>7.0</Version>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_ExeOutput>.\win32\debug</DCC_ExeOutput>
+        <DCC_DcuOutput>.\win32\debug\dcus</DCC_DcuOutput>
+        <DCC_ObjOutput>.\win32\debug\dcus</DCC_ObjOutput>
+        <DCC_HppOutput>.\win32\debug\dcus</DCC_HppOutput>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <Debugger_RunParams>..\..\ -o:notepad</Debugger_RunParams>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>None</Manifest_File>
+    </PropertyGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>VCLApplication</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Parameters>
+                    <Parameters Name="UseLauncher">False</Parameters>
+                    <Parameters Name="LoadAllSymbols">True</Parameters>
+                    <Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+                    <Parameters Name="RunParams">..\..\</Parameters>
+                </Parameters>
+                <VersionInfo>
+                    <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
+                    <VersionInfo Name="MajorVer">1</VersionInfo>
+                    <VersionInfo Name="MinorVer">0</VersionInfo>
+                    <VersionInfo Name="Release">0</VersionInfo>
+                    <VersionInfo Name="Build">0</VersionInfo>
+                    <VersionInfo Name="Debug">False</VersionInfo>
+                    <VersionInfo Name="PreRelease">False</VersionInfo>
+                    <VersionInfo Name="Special">False</VersionInfo>
+                    <VersionInfo Name="Private">False</VersionInfo>
+                    <VersionInfo Name="DLL">False</VersionInfo>
+                    <VersionInfo Name="Locale">3081</VersionInfo>
+                    <VersionInfo Name="CodePage">1252</VersionInfo>
+                </VersionInfo>
+                <VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName"/>
+                    <VersionInfoKeys Name="FileDescription"/>
+                    <VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="InternalName"/>
+                    <VersionInfoKeys Name="LegalCopyright"/>
+                    <VersionInfoKeys Name="LegalTrademarks"/>
+                    <VersionInfoKeys Name="OriginalFilename"/>
+                    <VersionInfoKeys Name="ProductName"/>
+                    <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="Comments"/>
+                </VersionInfoKeys>
+                <Source>
+                    <Source Name="MainSource">TestBuilder.dpr</Source>
+                </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\fmxdesigner190.bpl">FMX Form designer and property and component editors</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBE1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBE1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBU1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBU1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclDAD1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclDAD1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBBDE1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBBDE1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBADO1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBADO1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRAP1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRAP1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBC1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBC1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBDBE1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBDBE1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDS)\RBuilder\Lib\Win32\dclRBFireDAC1519.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\RBuilder\Lib\Win32\dclRBFireDAC1519.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\EurekaLogComponent.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\bin\EurekaLogComponent.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\EurekaLogExpert.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\bin\EurekaLogExpert.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxCoreRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxCoreRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxLibraryRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxLibraryRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxHttpIndyRequestRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxHttpIndyRequestRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPageControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPageControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxServerModeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxServerModeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDBXServerModeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDBXServerModeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxFireDACServerModeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxFireDACServerModeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxADOServerModeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxADOServerModeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxEditorsRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxEditorsRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxEditorFieldLinkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxEditorFieldLinkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxWizardControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxWizardControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarExtDBItemsRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarExtDBItemsRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarExtItemsRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarExtItemsRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarDBNavRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxBarDBNavRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRibbonRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRibbonRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxTabbedMDIRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxTabbedMDIRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDockingRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDockingRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxLayoutControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxLayoutControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSpreadSheetRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSpreadSheetRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxTreeListRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxTreeListRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxGridRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxGridRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxVerticalGridRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxVerticalGridRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxmdsRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxmdsRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSpellCheckerRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSpellCheckerRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxTileControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxTileControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxNavBarRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxNavBarRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsCoreRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsCoreRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlackRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlackRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlueprintRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlueprintRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlueRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinBlueRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinCaramelRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinCaramelRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinCoffeeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinCoffeeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDarkRoomRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDarkRoomRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDarkSideRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDarkSideRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDevExpressDarkStyleRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDevExpressDarkStyleRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDevExpressStyleRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinDevExpressStyleRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinFoggyRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinFoggyRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinGlassOceansRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinGlassOceansRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinHighContrastRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinHighContrastRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkiniMaginaryRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkiniMaginaryRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLilianRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLilianRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLiquidSkyRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLiquidSkyRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLondonLiquidSkyRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinLondonLiquidSkyRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMcSkinRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMcSkinRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMetropolisDarkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMetropolisDarkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMetropolisRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMetropolisRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMoneyTwinsRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinMoneyTwinsRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007BlackRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007BlackRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007BlueRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007BlueRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007GreenRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007GreenRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007PinkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007PinkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007SilverRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2007SilverRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010BlackRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010BlackRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010BlueRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010BlueRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010SilverRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2010SilverRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013DarkGrayRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013DarkGrayRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013LightGrayRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013LightGrayRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013WhiteRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2013WhiteRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2016ColorfulRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2016ColorfulRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2016DarkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinOffice2016DarkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinPumpkinRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinPumpkinRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSevenClassicRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSevenClassicRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSevenRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSevenRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSharpPlusRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSharpPlusRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSharpRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSharpRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSilverRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSilverRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSpringTimeRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSpringTimeRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinStardustRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinStardustRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSummer2008RS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinSummer2008RS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinTheAsphaltWorldRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinTheAsphaltWorldRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinValentineRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinValentineRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013BlueRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013BlueRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013DarkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013DarkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013LightRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVisualStudio2013LightRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVS2010RS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinVS2010RS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinWhiteprintRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinWhiteprintRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinXmas2008BlueRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinXmas2008BlueRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSCoreRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSCoreRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSTeeChartRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSTeeChartRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSLnksRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSLnksRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSDBTeeChartRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSDBTeeChartRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxPScxPCProdRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxPScxPCProdRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridOLAPRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridOLAPRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxdbtrRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxdbtrRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxtrmdRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxtrmdRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxOrgCRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxOrgCRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDBOrRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxDBOrRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxFlowChartRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxFlowChartRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxMapControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxMapControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRichEditControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRichEditControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxGaugeControlRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxGaugeControlRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxIconLibraryRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxIconLibraryRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPageControldxBarPopupMenuRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPageControldxBarPopupMenuRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRibbonCustomizationFormRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxRibbonCustomizationFormRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxTreeListdxBarPopupMenuRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxTreeListdxBarPopupMenuRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxGridWizardRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxGridWizardRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsDesignHelperRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsDesignHelperRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinscxPCPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinscxPCPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinscxSchedulerPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinscxSchedulerPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxEditorsHelperRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxEditorsHelperRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxBarPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxBarPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxNavBarPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxNavBarPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxRibbonPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxRibbonPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxPCPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxPCPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxSchedulerPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinscxSchedulerPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxDLPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dxSkinsdxDLPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxBarsPaintersRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxBarsPaintersRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxNavBarPainterRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxNavBarPainterRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxRibbonPaintersRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxSkinsdxRibbonPaintersRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxCommonRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxCommonRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxExtCommonRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxExtCommonRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxLCLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxLCLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxPivotGridLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxPivotGridLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxSchedulerLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxSchedulerLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxTLLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxTLLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxVGridLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxVGridLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxDBOCLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxDBOCLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxDBTVLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxDBTVLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxFCLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxFCLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxGaugeControlLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxGaugeControlLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxGridLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPScxGridLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxOCLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxOCLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxSpreadSheetLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSdxSpreadSheetLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSPrVwAdvRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSPrVwAdvRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSPrVwRibbonRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSPrVwRibbonRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSRichEditControlLnkRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dcldxPSRichEditControlLnkRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridChartRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxPivotGridChartRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerRibbonStyleEventEditorRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerRibbonStyleEventEditorRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerGridRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerGridRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerTreeBrowserRS19.bpl">File C:\Delphi\Components\DevExpress VCL\15.2.3\Library\RS19\dclcxSchedulerTreeBrowserRS19.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclbindcomp190.bpl">File c:\program files (x86)\embarcadero\rad studio\12.0\bin\dclbindcomp190.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclbindcompfmx190.bpl">Embarcadero LiveBindings Components FireMonkey</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclbindcompvcl190.bpl">Embarcadero LiveBindings Components VCL</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclBindCompFireDAC190.bpl">LiveBinding Expression Components FireDac</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclbindcompdbx190.bpl">LiveBindings Expression Components DbExpress</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp190.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="RecursiveFolderSearch.pas"/>
+        <DCCReference Include="ComponentSource\DUnitm\MiniTestFramework.pas"/>
+        <DCCReference Include="uTestBuilder.pas"/>
+        <DCCReference Include="uTestBuilder.ProjectInfo.pas"/>
+        <DCCReference Include="DUnitm.Constants.pas"/>
+        <DCCReference Include="ComponentSource\DelphiLexer\Delphi.Lexer.pas"/>
+        <DCCReference Include="uTestBuilder.Scripts.pas"/>
+        <DCCReference Include="ComponentSource\DelphiLexer\Delphi.Versions.pas"/>
+        <DCCReference Include="ComponentSource\DelphiLexer\Delphi.DProj.pas"/>
+        <DCCReference Include="ComponentSource\DelphiLexer\XMLNodeReader.pas"/>
+        <DCCReference Include="Tests\TestDelphiDProj.pas"/>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

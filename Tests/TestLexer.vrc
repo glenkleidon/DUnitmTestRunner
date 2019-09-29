@@ -1,0 +1,3 @@
+
+MAINICON ICON "TestLexer_Icon.ico"
+PLATFORMTARGETS RCDATA {1}
