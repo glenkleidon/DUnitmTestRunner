@@ -68,8 +68,4 @@ TestBuilder.res
 win32/
 TestRunnerResults.txt
 TestRunner.bat
-TestBuilder_Icon1.ico
-TestBuilder_Icon.ico
-TestBuilder.otares
 *.otares
-*.ico
