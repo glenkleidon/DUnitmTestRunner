@@ -94,7 +94,7 @@ Typically you can use this open if you are monitoring the result file (typically
 ```
 
 ### Create the TestRunner Script against Delphi Berlin, but dont run the tests
-Typically you can use this open if you are monitoring the result file (typically "TestRunnerResults.txt") using a continous tail or a windows viwer like Notepad++ with the tail option enabled.
+Use this to create the Batch Script so you can run it later (eg in the IDE Build Events or as part of the CI process).
 
 `>TestBuilder c:\DelphiProjects\MyBigProject\ -v:Berlin /b`
 ```
@@ -123,16 +123,16 @@ It is also possible to include only specific test Projects by name by excluding 
 ```
 
 ## IDE integration - Minimal
-Using **BUILD EVENTS** in delphi, it is possible to prevent an application from building if the test cases fail.  This is done by adding a **PRE Build Event** to Create the build Script, but dont run it. Then in the **POST Build Event** run the script.  
+Using **BUILD EVENTS** in delphi, it is possible to prevent an application from building if the test cases fail.  This is done by adding a **PRE Build Event** to Create the build Script without running it. Then in the **POST Build Event** run the script.  
 
 ![Build Events](https://raw.githubusercontent.com/glenkleidon/DUnitmTestRunner/master/Docs/BuildEvents.PNG)
 
-When running the script, The TestRunner script will report that there has been a Test failure and the Application build will fail.
+When Delphi runs the script post build, The _*TestRunner.bat*_ script will report that there has been a Test failure and the Application build will fail.
 
 ![Build Failure In IDE](https://raw.githubusercontent.com/glenkleidon/DUnitmTestRunner/master/Docs/BuildFailedDueToFailedTest.PNG)
 
 ## Project Roadmap
- + Resource files not currently integrated.  We know this might be annoying - its only the list.
+ + Resource files not currently integrated.  We know this might be annoying - an issue has been raised.
  + NUnit XML Report format.  This will extend the "Open with" functionality 
  + Delphi IDE Integration: Test WorkBench.  Allows you to Select and run individual tests - in a similar way to Visual Studio.
 
