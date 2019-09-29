@@ -9,7 +9,9 @@ const
     '@cd "<PROJECTDIR>"'#13#10 +
     '@ECHO ------------------------------------------------------------------'#13#10
     + '@ECHO PROJECT <PROJECTNAME> Building with <DELPHISHORTNAME>...'#13#10 +
-    '@ECHO PROJECT <PROJECTNAME> Building with <DELPHISHORTNAME>...>>%TEST_RESULTS%'#13#10;
+    '@ECHO PROJECT <PROJECTNAME> Building with <DELPHISHORTNAME>...>>%TEST_RESULTS%'#13#10
+    + 'IF NOT EXIST "<OUTPUTPATH>" (mkdir "<OUTPUTPATH>")'#13#10 +
+    'IF NOT EXIST "<DCUOUTPUTPATH>" (mkdir "<DCUOUTPUTPATH>")'#13#10;
 
   DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' +
     '-$O- -$W+ -$D- -$C+ ' + '<SWITCH_NOCONFIG> -B -Q -TX.exe ' +
@@ -219,6 +221,12 @@ begin
     AProperties.Properties.values[ENV_DELPHI_PRODUCTNAME],
     [rfReplaceAll, rfIgnoreCase]);
 
+  result := StringReplace(result, '<OUTPUTPATH>', AProject.OutputPath,
+    [rfReplaceAll, rfIgnoreCase]);
+
+  result := StringReplace(result, '<DCUOUTPUTPATH>', AProject.DCUOutputPath,
+    [rfReplaceAll, rfIgnoreCase]);
+
   result := StringReplace(result, '<DCCPATH>', AProject.DCCPath,
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCCEXE>', AProject.DCCExe,
@@ -330,7 +338,7 @@ var
   lRoot: string;
 begin
   result := AProject;
-  lRegKeys := TStringlist.create;
+  lRegKeys := TStringlist.Create;
   try
     lRegKeys.Text := DelphiRegKeyByDelphiVersion(AVersion.DelphiVersion);
     lRegKey := lRegKeys[0];
