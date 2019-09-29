@@ -16,7 +16,9 @@ uses
   Delphi.Versions in 'ComponentSource\DelphiLexer\Delphi.Versions.pas',
   Delphi.DProj in 'ComponentSource\DelphiLexer\Delphi.DProj.pas',
   XMLNodeReader in 'ComponentSource\DelphiLexer\XMLNodeReader.pas',
-  TestDelphiDProj in 'Tests\TestDelphiDProj.pas';
+  TestDelphiDProj in 'Tests\TestDelphiDProj.pas',
+  windows,
+  ShellApi;
 
 var lStartFolder: string;
 begin
@@ -50,9 +52,13 @@ begin
        GetExcludeListCmd, GetIncludeListCmd);
 
     // Optionally run the Script.
-    if FindCmdLineSwitch('b') then exit;
-
-
+    if FindCmdLineSwitch('b') then
+    begin
+      Writeln('Wrote Test Runner script to ',scriptName);
+      exit;
+    end;
+    Writeln('Building and Executing Tests');
+    ShellExecute(0, 'open', pchar(ScriptName),Pchar(GetOpenWithCMD),0,sw_hide);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);

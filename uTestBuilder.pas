@@ -71,8 +71,10 @@ function GetIncludeListCmd: string;
 function GetExcludeListCmd: string;
 function GetScriptNameCmd: string;
 function GetVersionCmd: string;
+function GetOpenWithCMD: string;
 function GetStartFolder: string;
 function HelpMessage: string;
+
 
 implementation
 
@@ -81,7 +83,7 @@ const HELP_MESSAGE =
 //   12345678901234567890123456789012345678901234567890123456789012345678901234567890
    '>TestBuilder [-|/][?|help] | [[-|/]b] [[-|/][EXCLUDE[:]<[*]|Project;Project...>]'#13#10 +
    '     [[-|/][INCLUDE[:]<Project1;Project2...>] [[-|/]S:<ScriptName>] '#13#10+
-   '     [[-|/]V:<DelphiVersion>'#13#10+
+   '     [[-|/]V:<DelphiVersion>] [[-|/]O:<OpenWith>]'#13#10+
    '     <StartInFolder>'#13#10#13#10+
    ' ?|help           : This Message'#13#10+
    ' b                : Build SCRIPT ONLY, do not RUN'#13#10 +
@@ -91,6 +93,8 @@ const HELP_MESSAGE =
    '                    eg: /INCLUDE:TestMyFunc;TestMyProc'#13#10 +
    ' V:<DelphiVersion>: The version of delphi to build. Use short name or VersionId'#13#10+
    '                    eg: -v:D7 -v:Delphi7 -v:XE2 -v:Berlin -v:Seattle etc'#13#10+
+   ' O:<OpenWith>     : Open the test result with a specific program default (none)'#13#10+
+   '                    eg: -O:Notepad - opens the Test results in notepad'#13#10+
    ' <ScriptName>     : Full pathname to Test Runner Script '#13#10+
    '                  (<StartInFolder>'+DEFAULT_SCRIPT_NAME+' if not supplied)'#13#10 +
    ' <StartInFolder>  : (Required) Folder to recursively search for test projects.';
@@ -127,27 +131,35 @@ begin
   end;
 end;
 
+function GetCommandLineValue(ASwitch: string): string;
+begin
+  result := GetCMDlineSwitch('/-',ASwitch);
+  if copy(Result,1,1)=':' then result := copy(Result,2,Maxint);
+end;
+
 function GetIncludeListCmd: string;
 begin
-  result := GetCMDlineSwitch('/-','EXCLUDE');
-  if copy(Result,1,1)=':' then result := copy(Result,2,Maxint);
+  result := GetCommandLineValue('EXCLUDE');
 end;
 
 function GetExcludeListCmd: string;
 begin
-  result := GetCMDlineSwitch('/-','INCLUDE');
-  if copy(Result,1,1)=':' then result := copy(Result,2,Maxint);
+  result := GetCommandLineValue('INCLUDE');
 end;
 
 function GetScriptNameCmd: string;
 begin
-  result := GetCMDLineSwitch('/|','S');
+  result := GetCommandLineValue('S');
 end;
 
 function GetVersionCmd: string;
 begin
-  result := GetCMDLineSwitch('/|','V');
-  if copy(Result,1,1)=':' then result := copy(Result,2,Maxint);
+  result := GetCommandLineValue('V');
+end;
+
+function GetOpenWithCMD: string;
+begin
+  result := GetCommandLineValue('O');
 end;
 
 function GetStartFolder: string;
@@ -208,6 +220,8 @@ begin
     begin
      lProject := lProjectList[i];
      if SkipProject then Continue;
+     writeln(copy(lProject,length(RootFolder),MaxInt));
+
      lTestSection := lTestSection +
        Commandline(lProject, ADelphiVersion, DEFAULT_DUNITM_SCRIPT_COMMAND);
     end;
@@ -219,7 +233,6 @@ begin
     if pos('\',ScriptName)=0 then
       ScriptName := includeTrailingPathdelimiter(RootFolder) + ScriptName;
     lScript.SaveToFile(ScriptName);
-    writeln('Wrote Test Runner script to ',scriptName);
   finally
     freeandnil(lProjectList);
     Freeandnil(lScript);
@@ -322,7 +335,7 @@ begin
       fProjectList.Delete(i);
       continue;
     end;
-    writeln(lProjectFile, ' is a test file');
+   // writeln(copy(lProjectFile,length(RootFolder),MaxInt));
   end;
   result := self.fProjectList.text;
 end;
@@ -363,10 +376,10 @@ begin
 
 end;
 {$IFDEF HAS_HELPERS}
-//procedure TBuildResultHelper.Init;
-//begin
-//  BuildResultInit(self);
-//end;
+procedure TBuildResultHelper.Init;
+begin
+  BuildResultInit(self);
+end;
 {$ENDIF}
 
 initialization

@@ -113,8 +113,8 @@ begin
     // Ok this is a Test project. What is the title?
 
 
-    writeln('Still need to get Titles, ProjectSearchPath, TestUnitList');
-    writeln('  and projectbasedCases for', AProjectFile );
+  //  writeln('Still need to get Titles, ProjectSearchPath, TestUnitList');
+  //  writeln('  and projectbasedCases for ', AProjectFile );
 
   finally
     Freeandnil(lDPRFile);

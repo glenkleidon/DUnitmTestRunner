@@ -5,14 +5,10 @@ interface
 uses SysUtils;
 
  {$IFDEF CONDITIONALEXPRESSIONS}
- {$IF CompilerVersion >= 17.0}
+  {$IF CompilerVersion >= 17.0}
       {$DEFINE HAS_INLINE}
       {$DEFINE HAS_RECORD_HELPERS}
- {$IFEND}
- {$IF CompilerVersion >= 23.0}
-      {$DEFINE }
-      {$DEFINE HAS_RECORD_HELPERS}
- {$IFEND}
+  {$IFEND}
  {$ENDIF}
 
 
@@ -47,6 +43,7 @@ const
   ENV_BDSUSERDIR = 'BDSUSERDIR';
   ENV_DELPHI_SHORTNAME = 'DELPHISHORTNAME';
   ENV_DELPHI_PRODUCTNAME = 'DELPHIPRODUCTNAME';
+  ENV_BDS_DCUPATH = 'BDSDCUPATH';
 
 
 
@@ -63,11 +60,9 @@ const
 
   DEFAULT_BDSCOMMON = '$(Public)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
   DEFAULT_BDSUSERDIR  ='$(USERPROFILE)\Documents\$(BDSCOMPANY)\$(STUDIONAME)\$(PRODUCTVERSION)';
- {$IF CompilerVersion >= 23.0}
-      DEFAULT_BDSDCUDIR  = '$(BDSLIB)\$(Platform)\$(Config)';
- {$ELSE}
-      DEFAULT_BDSDCUDIR  = '$(BDSLIB)';
- {$IFEND}
+  DEFAULT_BDSDCUDIR  = '$(BDSLIB)';
+  DEFAULT_BDSDCUDIR_X64  = '$(BDSLIB)\$(Platform)\$(Config)';
+
 
   MAX_VERSION = 23;
   MAX_SUPPORTED_VERSION = 19;

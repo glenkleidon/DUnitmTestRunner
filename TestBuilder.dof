@@ -25,7 +25,7 @@ U=0
 V=1
 W=0
 X=1
-Y=1
+Y=2
 Z=1
 ShowHints=1
 ShowWarnings=1
@@ -88,7 +88,7 @@ RemoteSymbols=0
 MinStackSize=16384
 MaxStackSize=1048576
 ImageBase=4194304
-ExeDescription=
+ExeDescription=DUnitm Test Runner
 [Directories]
 OutputDir=.\win32\debug
 UnitOutputDir=.\win32\debug\dcus
@@ -100,7 +100,7 @@ Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams=..\..\ -v:d7
+RunParams=..\..\ -v:xe2 -o:notepad
 HostApplication=
 Launcher=
 UseLauncher=0

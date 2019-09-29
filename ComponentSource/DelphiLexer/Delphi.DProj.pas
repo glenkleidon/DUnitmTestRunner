@@ -7,6 +7,11 @@ uses SysUtils, Classes, XMLNodeReader;
 const
   DPROJ_PROPERTY_GROUP = 'PropertyGroup';
   DPROJ_CONDITION_ATTRIBUTE = 'Condition';
+  DPROJ_TARGETS = 'CodeGear.Common.Targets';
+  DPROJ_DELPHI_TARGET = 'CodeGear.Delphi.Targets';
+  DPROJ_COMMON_UNITALIASES = 'UnitAliases';
+  DPROJ_COMMON_UNITALIASES_START_TAG = '<'+DPROJ_COMMON_UNITALIASES+'>';
+  DPROJ_COMMON_UNITALIASES_END_TAG = '</'+DPROJ_COMMON_UNITALIASES+'>';
 
 type
   TConditionOperator = (coNone, coEquals, coNotEquals, coExists, coAnd, coOr);
@@ -24,11 +29,13 @@ type
   IDelphiEnvHandlers = Interface
     procedure SetProperties(const Value: TStrings);
     function GetProperties: TStrings;
+    function GetPlatformName: string;
     function ExpandPropertyValue(APropertyName: string): string;
     function ExpandEnvironmentValue(AEnvironmentVariable: string): string;
     function ReplaceDelphiEnvWithDosEnv(AEnvironmentVariable: string): string;
     function ExpandDelphiEnvVariables(AText: string): string;
     property Properties: TStrings read GetProperties write SetProperties;
+    Property PlatformName: String read GetPlatformName;
   End;
 
   IDelphiProjectProperties = Interface
@@ -52,6 +59,7 @@ type
     Function GetPropertyValue(APropertyname: string): string;
     function GetEnvironmentValue(AEnvironmentVariable: string): string;
     function GetPropertyOrEnvironmentValue(AName: string): string;
+    function GetPlatformName: String;
   public
     constructor Create;
     function ExpandPropertyValue(APropertyName: string): string;
@@ -60,6 +68,7 @@ type
     function ReplaceDelphiEnvWithDosEnv(AEnvironmentVariable: string): string;
     function ExpandDelphiEnvVariables(AText: string): string;
     property Properties: TStrings read GetProperties write SetProperties;
+    Property PlatformName: String read GetPlatformName;
   End;
 
 
@@ -84,6 +93,7 @@ function ParseCondition(ACondition: string): TProjectConditions;
 function ExpandValue(AValue: string; AGetPropertyValue: TGetPropertyValueDelegate;
   AReplaceIfEmpty: boolean = true): string;
 function AppendPath(APath: string; ANewPath: string): string;
+function GetTargetProperties(ABDSFolder: string): string;
 
 implementation
 
@@ -139,6 +149,37 @@ begin
         sp := sp + ilp + length(llPropertyValue) + 2;
     end;
   until (sp>length(Result));
+end;
+
+function GetTargetProperties(ABDSFolder: string): string;
+var
+  lXML: TStringlist;
+  lFilePath: string;
+  p,q : integer;
+begin
+  result := '';
+  lXML := TStringlist.create;
+  try
+    lFilePath :=includeTrailingPathDelimiter(ABDSFolder)+DPROJ_TARGETS;
+    if FileExists(lFilePath) then
+    begin
+      lXML.loadFromFile(lFilepath);
+
+      // Unit Aliases.
+
+      p := pos(DPROJ_COMMON_UNITALIASES_START_TAG,lXML.text);
+      q := pos(DPROJ_COMMON_UNITALIASES_END_TAG,lXML.text);
+      if (p>0) and (q>p) then
+      begin
+        p := p+Length(DPROJ_COMMON_UNITALIASES_START_TAG);
+        result := DPROJ_COMMON_UNITALIASES+'='+Trim(Copy(lXML.text, p, q-p));
+      end;
+    end;
+
+  finally
+    freeandnil(lXML);
+  end;
+
 end;
 
 function ParseCondition(ACondition: string): TProjectConditions;
@@ -566,6 +607,17 @@ end;
 function TDelphiEnvHandlers.ExpandPropertyValue(APropertyName: string): string;
 begin
    result := expandValue(APropertyName, GetPropertyValue);
+end;
+
+function TDelphiEnvHandlers.GetPlatformName: String;
+begin
+  result := Self.properties.Values['Platform'];
+  if sameText(result,'anycpu') then
+  begin
+    if sameText(self.Properties.values['DCC_DCCCompiler'],'DCC32') then
+      result := 'Win32'
+    else result := 'Win64';
+  end;
 end;
 
 end.

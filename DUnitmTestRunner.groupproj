@@ -1,44 +1,62 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <ProjectGuid>{985ed066-86ca-42a2-8154-746d131eff08}</ProjectGuid>
-  </PropertyGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <Projects Include="TestBuilder.dproj" />
-    <Projects Include="Tests\TestLexerD7.dproj" />
-  </ItemGroup>
-  <ProjectExtensions>
-    <Borland.Personality>Default.Personality</Borland.Personality>
-    <Borland.ProjectType />
-    <BorlandProject>
-  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
-  </ProjectExtensions>
-  <Target Name="TestLexerD7">
-    <MSBuild Projects="Tests\TestLexerD7.dproj" Targets="" />
-  </Target>
-  <Target Name="TestLexerD7:Clean">
-    <MSBuild Projects="Tests\TestLexerD7.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="TestLexerD7:Make">
-    <MSBuild Projects="Tests\TestLexerD7.dproj" Targets="Make" />
-  </Target>
-  <Target Name="TestBuilder">
-    <MSBuild Projects="TestBuilder.dproj" Targets="" />
-  </Target>
-  <Target Name="TestBuilder:Clean">
-    <MSBuild Projects="TestBuilder.dproj" Targets="Clean" />
-  </Target>
-  <Target Name="TestBuilder:Make">
-    <MSBuild Projects="TestBuilder.dproj" Targets="Make" />
-  </Target>
-  <Target Name="Build">
-    <CallTarget Targets="TestLexerD7;TestBuilder" />
-  </Target>
-  <Target Name="Clean">
-    <CallTarget Targets="TestLexerD7:Clean;TestBuilder:Clean" />
-  </Target>
-  <Target Name="Make">
-    <CallTarget Targets="TestLexerD7:Make;TestBuilder:Make" />
-  </Target>
-  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+    <PropertyGroup>
+        <ProjectGuid>{985ed066-86ca-42a2-8154-746d131eff08}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="TestBuilder.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\TestLexer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\TestRunnerTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <BorlandProject>
+                <Default.Personality/>
+            </BorlandProject>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="TestBuilder">
+        <MSBuild Projects="TestBuilder.dproj"/>
+    </Target>
+    <Target Name="TestBuilder:Clean">
+        <MSBuild Projects="TestBuilder.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestBuilder:Make">
+        <MSBuild Projects="TestBuilder.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestLexer">
+        <MSBuild Projects="Tests\TestLexer.dproj"/>
+    </Target>
+    <Target Name="TestLexer:Clean">
+        <MSBuild Projects="Tests\TestLexer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestLexer:Make">
+        <MSBuild Projects="Tests\TestLexer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TestRunnerTests">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj"/>
+    </Target>
+    <Target Name="TestRunnerTests:Clean">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TestRunnerTests:Make">
+        <MSBuild Projects="Tests\TestRunnerTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="TestBuilder;TestLexer;TestRunnerTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="TestBuilder:Clean;TestLexer:Clean;TestRunnerTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="TestBuilder:Make;TestLexer:Make;TestRunnerTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -39,7 +39,7 @@ const
 
   DUNITM_TEST_RUNNER_SCRIPT = ':: -- DUNIT M - TEST SCRIPT RUNNER --'#13#10 +
     ':: SET ENVIRONMENT '#13#10 + '@Echo off'#13#10 + 'SET EXIT_CODE=0'#13#10 +
-    'SET ROOT=%cd%'#13#10+  'SET TEST_RESULTS=<ROOTPATH>Test_results.txt'#13#10 +
+    'SET ROOT=%cd%'#13#10+  'SET TEST_RESULTS=<ROOTPATH>TestRunnerResults.txt'#13#10 +
     '@echo ==== DUNITm TEST RUN Time: %DATE:~-4%-%DATE:~4,2%-%DATE:~7,2% ==== >%TEST_RESULTS%'#13#10+
     ':: EXECUTE TESTS '#13#10 + '<TESTEXECUTION>'#13#10 +
     '@ECHO SUMMARY:>>%TEST_RESULTS%'#13#10 + 'IF %EXIT_CODE% EQU 2 ('#13#10 +
@@ -49,6 +49,10 @@ const
     ' @echo ONE OR MORE BUILDS FAILED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
     'IF %EXIT_CODE% EQU 0 ('#13#10 +
     ' @echo ALL TESTS PASSED>>%TEST_RESULTS%'#13#10 + ')'#13#10 +
+    'IF [%1] NEQ [] ('#13#10+
+    '  @echo Opening in %1'#13#10+
+    '  %1 %TEST_RESULTS%'#13#10+
+    ')'#13#10+
     'cd %ROOT%'#13#10 + '@exit /b %EXIT_CODE%';
 
   REG_ROOT_DIR = 'RootDir';
@@ -99,6 +103,7 @@ Function Commandline(AProjectPath: string; ADelphiVersion: string;
 implementation
 
 uses Registry, Delphi.Versions, Delphi.DProj, windows;
+
 
 function PathToDir(APath: string): string;
 begin
@@ -228,9 +233,15 @@ begin
   if not DirectoryExists(AProject.DCUOutputPath) then
     ForceDirectories(AProject.DCUOutputPath);
 
+  AProperties.properties.Values['Platform'] := AProperties.Handlers.PlatformName;
+
   // Expand the Search Paths
   AProject.UnitSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
-    (AppendPath(AProject.UnitSearchPath, DEFAULT_BDSDCUDIR));
+    (AppendPath(AProject.UnitSearchPath, AProperties.Properties.Values[ENV_BDS_DCUPATH]));
+  // Early Versions of BDS had the Platform set to ANYCPU by default (Hacky fix below)
+  //TODO : fix hacky ANYCPU replacement
+  AProject.UnitSearchPath := StringReplace(AProject.UnitSearchPath, PLATFORM_ANYCPU,
+       AProject.TargetPlatform,[rfReplaceAll, rfIgnoreCase]);
 
   AProject.IncludeSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
     (AProject.IncludeSearchPath);
@@ -357,14 +368,23 @@ var
   lProperty: string;
 begin
   result := AProject;
+  AProperties.Properties.Text := AProperties.Properties.Text +
+    GetTargetProperties(AProject.DelphiBinPath);
+
   AProperties.ExtractPropertiesFromDProj(AProject.ProjectDir + '\' +
     ChangeFileExt(AProject.ProjectName, '.dproj'));
 
   result.ConditionalDefines := AProperties.Properties.Values['DCC_Define'];
   result.TargetPlatform := AProperties.Properties.Values['Platform'];
   if sameText(Result.TargetPlatform,PLATFORM_ANYCPU) then
-      Result.TargetPlatform := PLATFORM_WIN32;
+  begin
+    Result.TargetPlatform := PLATFORM_WIN32;
+    Result.UnitSearchPath := StringReplace(Result.UnitSearchPath, PLATFORM_ANYCPU,
+       Result.TargetPlatform,[rfReplaceAll, rfIgnoreCase]);
+  end;
   result.UnitAliases := AProperties.Properties.Values['DCC_UnitAlias'];
+  if length(Result.UnitAliases)=0 then
+    result.UnitAliases := AProperties.Properties.Values[DPROJ_COMMON_UNITALIASES];
   result.DCUOutputPath := AProperties.Properties.Values['DCC_DcuOutput'];
   result.OutputPath := AProperties.Properties.Values['DCC_ExeOutput'];
   result.Namespaces := AProperties.Properties.Values['DCC_Namespace'];
@@ -593,6 +613,9 @@ begin
     DelphiCompanyByDelphiVersion(lDelphi.DelphiVersion);
   lProperties.Properties.Values[ENV_DELPHI_SHORTNAME] := lDelphi.ShortName;
   lProperties.Properties.Values[ENV_DELPHI_PRODUCTNAME] := lDelphi.ProductName;
+  if lDelphi.DelphiVersion>=15 then
+    lProperties.Properties.Values[ENV_BDS_DCUPATH] :=DEFAULT_BDSDCUDIR_X64
+  else lProperties.Properties.Values[ENV_BDS_DCUPATH] := DEFAULT_BDSDCUDIR;
 
   lProperties.Properties.Text := lProperties.Properties.Text + VersionSpecificCompilerSwitches(lDelphi);
 
