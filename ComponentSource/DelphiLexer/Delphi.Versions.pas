@@ -45,6 +45,9 @@ const
   ENV_BDSCOMPANY = 'BDSCOMPANY';
   ENV_BDSCOMMONDIR = 'BDSCOMMONDIR';
   ENV_BDSUSERDIR = 'BDSUSERDIR';
+  ENV_DELPHI_SHORTNAME = 'DELPHISHORTNAME';
+  ENV_DELPHI_PRODUCTNAME = 'DELPHIPRODUCTNAME';
+
 
 
   EMBARCADERO_KEY = 'Software\Embarcadero\%s\%u.0';
@@ -396,7 +399,14 @@ var
 begin
   result := '';
   case ADelphiVersion of
-    1 .. 10:
+    1 .. 7:
+      begin
+        lVersion := ADelphiVersion;
+        lRegPath := 'Delphi';
+        lKey := BORLAND_KEY;
+        SetRegOverride(REG_DELPHI);
+      end;
+    8 .. 10:
       begin
         lVersion := 0;
         lKey := BORLAND_KEY;
@@ -480,35 +490,49 @@ end;
 
 Function VersionSpecificCompilerSwitches(AVersion: TDelphiVersion): string;
 var
-  lSwitchValue: string;
+  lSwitchValue: Array[1..2] of string;
 
   Procedure AddSwitch(Aname: string; AValue : string);
   var lCr: string;
   begin
     if length(result)>0 then lCr := #13#10 else lCr := '';
-    result := Result + format('%sSWITCH_DCUPATH=%s',[lCr, lSwitchValue]);
+    result := Result + format('%s%s=%s',[lCr, AName, AValue]);
   end;
 
 begin
   result := '';
-  // the DCU OUTPUT Path Switch;
+
+
   case AVersion.DelphiVersion of
-    1..7: lSwitchValue := '-N';
-    8..18: lSwitchValue := '-N0';
+    1..7:
+     begin
+       // the DCU OUTPUT Path Switch;
+       lSwitchValue[1] := '-N';
+      // Has no SWITCH_NOCONFIG
+       lSwitchValue[2] := '';
+     end;
+    8..18:
+     begin
+       lSwitchValue[1] := '-N0';
+       lSwitchValue[2] := '--no-config';
+     end;
   else
-    lSwitchValue := '-NU';
+    begin
+      lSwitchValue[1] := '-NU';
+      lSwitchValue[2] := '--no-config';
+    end;
   end;
-  AddSwitch('SWITCH_DCUPATH', lSwitchValue);
-  // Add others here.
+  AddSwitch('SWITCH_DCUPATH', lSwitchValue[1]);
+  AddSwitch('SWITCH_NOCONFIG', lSwitchValue[2]);
 
 end;
 
-{.$IFDEF HAS_RECORD_HELPERS}
+{$IFDEF HAS_RECORD_HELPERS}
 Procedure TDelphiVersionHelper.Init;
 begin
   DelphiVersionInit(Self);
 end;
-{.$ENDIF}
+{$ENDIF}
 
 initialization
  // check for a registry override;

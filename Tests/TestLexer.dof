@@ -94,13 +94,13 @@ OutputDir=.\win32\debug
 UnitOutputDir=.\win32\debug\dcus
 PackageDLLOutputDir=
 PackageDCPOutputDir=
-SearchPath=..\ComponentSource\DUnitm;..\ComponentSource\DelphiLexer
+SearchPath=..\;..\ComponentSource\DUnitm;..\ComponentSource\DelphiLexer
 Packages=vcl;rtl;vclx;indy;vclie;xmlrtl;inetdbbde;inet;inetdbxpress;dbrtl;soaprtl;dsnap;VclSmp;dbexpress;vcldb;dbxcds;inetdb;bdertl;vcldbx;adortl;teeui;teedb;tee;ibxpress;visualclx;visualdbclx;vclactnband;vclshlctrls;IntrawebDB_50_70;Intraweb_50_70;Rave50CLX;Rave50VCL;dclOfficeXP
 Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams=..\..\ -v:d7
+RunParams=/p
 HostApplication=
 Launcher=
 UseLauncher=0
@@ -141,9 +141,8 @@ Item0=DEBUG
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
 [HistoryLists\hlSearchPath]
-Count=2
-Item0=..\ComponentSource\DUnitm;..\ComponentSource\DelphiLexer
-Item1=..\;..\ComponentSource\DUnitm;..\ComponentSource\DelphiLexer
+Count=1
+Item0=..\;..\ComponentSource\DUnitm;..\ComponentSource\DelphiLexer
 [HistoryLists\hlUnitOutputDirectory]
 Count=1
 Item0=.\win32\debug\dcus

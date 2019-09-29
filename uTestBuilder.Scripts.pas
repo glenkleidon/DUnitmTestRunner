@@ -8,11 +8,11 @@ const
   DEFAULT_DUNITM_BUILD_PREFIX = ':: PROJECT: <PROJECTNAME>'#13#10 +
     '@cd "<PROJECTDIR>"'#13#10+
     '@ECHO ------------------------------------------------------------------'#13#10+
-    '@ECHO PROJECT <PROJECTNAME> Building...'#13#10+
-    '@ECHO PROJECT <PROJECTNAME> Building...>>%TEST_RESULTS%'#13#10;
+    '@ECHO PROJECT <PROJECTNAME> Building with <DELPHISHORTNAME>...'#13#10+
+    '@ECHO PROJECT <PROJECTNAME> Building with <DELPHISHORTNAME>...>>%TEST_RESULTS%'#13#10;
 
   DEFAULT_DUNITM_BUILD_COMMAND = '"<DCCPATH>\<DCCEXE>" ' +
-    '-$O- -$W+ -$D- -$C+ ' + '--no-config -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
+    '-$O- -$W+ -$D- -$C+ ' + '<SWITCH_NOCONFIG> -B -Q -TX.exe ' + '-A<UNITALIASES> ' +
     '-D<CONDITIONALDEFINES> ' + '-E"<OUTPUTPATH>" ' + '-I<INCLUDESEARCHPATH> ' +
     '<SWITCH_DCUPATH>"<DCUOUTPUTPATH>" ' + '-NS<NAMESPACES> ' + '-O<OBJECTSEARCHPATH> ' +
     '-R<RESOURCESEARCHPATH> ' + '-U<UNITSEARCHPATH> ' + '-CC -VN -W- -H-' +
@@ -93,92 +93,6 @@ Type
     CriticalFlags: string;
   End;
 
-  {
-    Compiler switches: -$<letter><state> (defaults are shown below)
-    A8  Aligned record fields
-    B-  Full boolean Evaluation
-    C+  Evaluate assertions at runtime
-    D+  Debug information
-    G+  Use imported data references
-    H+  Use long strings by default
-    I+  I/O checking
-    J-  Writeable structured consts
-    L+  Local debug symbols
-    M-  Runtime type info
-    O+  Optimization
-    P+  Open string params
-    Q-  Integer overflow checking
-    R-  Range checking
-    T-  Typed @ operator
-    U-  Pentium(tm)-safe divide
-    V+  Strict var-strings
-    W-  Generate stack frames
-    X+  Extended syntax
-    Y+  Symbol reference info
-    Z1  Minimum size of enum types
-
-  }
-  (*
-
-    -A<unit>=<alias> = Set unit alias
-    -B = Build all units
-    -CC = Console target
-    -CG = GUI target
-    -D<syms> = Define conditionals
-    -E<path> = EXE/DLL output directory
-    -F<offset> = Find error
-    -GD = Detailed map file
-    -GP = Map file with publics
-    -GS = Map file with segments
-    -H = Output hint messages
-    -I<paths> = Include directories
-    -J = Generate .obj file
-    -JPHNE = Generate C++ .obj file, .hpp file, in namespace, expo
-    -JL = Generate package .lib, .bpi, and all .hpp files for C++
-    -K<addr> = Set image base addr
-    -LE<path> = package .bpl output directory
-    -LN<path> = package .dcp output directory
-    -LU<package> = Use package
-    -M = Make modified units
-    -NU<path> = unit .dcu output directory
-    -NH<path> = unit .hpp output directory
-    -NO<path> = unit .obj output directory
-    -NB<path> = unit .bpi output directory
-    -NX<path> = unit .xml output directory
-    -NS<namespaces> = Namespace search path
-    -O<paths> = Object directories
-    -P = look for 8.3 file names also
-    -Q = Quiet compile
-    -R<paths> = Resource directories
-    -TX<ext> = Output name extension
-    -U<paths> = Unit directories
-    -V = Debug information in EXE
-    -VR = Generate remote debug (RSM)
-    -VT = Debug information in TDS
-    -VN = TDS symbols in namespace
-    -W[+|-|^][warn_id] = Output warning messages
-    -Z = Output 'never build' DCPs
-    -$<dir> = Compiler directive
-    --help = Show this help screen
-    --version = Show name and version
-    --codepage:<cp> = specify source file encoding
-    --default-namespace:<namespace> = set namespace
-    --depends = output unit dependency information
-    --doc = output XML documentation
-    --drc = output resource string .drc file
-    --no-config = do not load default dcc32.cfg file
-    --description:<string> = set executable description
-    --inline:{on|off|auto} = function inlining control
-    --legacy-ifend = allow legacy $IFEND directive
-    --zero-based-strings[+|-] = strings are indexed starting at 0
-    --peflags:<flags> = set extra PE Header flags field
-    --peoptflags:<flags> = set extra PE Header optional flags fiel
-    --peosversion:<major>.<minor> = set OS Version fields in PE He
-    --pesubsysversion:<major>.<minor> = set Subsystem Version fiel
-    --peuserversion:<major>.<minor> = set User Version fields in P
-
-
-  *)
 Function Commandline(AProjectPath: string; ADelphiVersion: string;
   ABuildText: string = ''): string;
 
@@ -268,10 +182,20 @@ begin
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<PROJECTNAME>',
     ChangeFileExt(AProject.ProjectName, ''), [rfReplaceAll, rfIgnoreCase]);
+
+  result := StringReplace(result, '<DELPHISHORTNAME>',
+   AProperties.Properties.values[ENV_DELPHI_SHORTNAME], [rfreplaceAll, rfIgnoreCase]);
+
+  result := StringReplace(result, '<DELPHIPRODUCTNAME>',
+   AProperties.Properties.values[ENV_DELPHI_PRODUCTNAME], [rfreplaceAll, rfIgnoreCase]);
+
   result := StringReplace(result, '<DCCPATH>', AProject.DCCPath,
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCCEXE>', AProject.DCCExe,
     [rfReplaceAll, rfIgnoreCase]);
+  result := StringReplace(result, '<SWITCH_NOCONFIG>',
+    AProperties.Properties.Values['SWITCH_NOCONFIG'],
+     [rfReplaceAll, rfIgnoreCase]);
 
   if length(AProject.UnitAliases) = 0 then
     result := StringReplace(result, '-A<UNITALIASES> ', '', [rfIgnoreCase])
@@ -659,7 +583,7 @@ begin
     lDelphi := FindDelphi(ADelphiVersion);
 
   if lDelphi.DelphiVersion = -1 then
-    raise Exception.CreateFmt('Delphi Version % not found', [ADelphiVersion]);
+    raise Exception.CreateFmt('Delphi Version %s not found', [ADelphiVersion]);
   // Set Version Specific Properties
   lProperties.Properties.Values[ENV_PRODUCTVERSION] :=
     DelphiProductVersion(lDelphi);
@@ -667,7 +591,11 @@ begin
   lProperties.Properties.Values[ENV_BDSUSERDIR] := DEFAULT_BDSUSERDIR;
   lProperties.Properties.Values[ENV_BDSCOMPANY] :=
     DelphiCompanyByDelphiVersion(lDelphi.DelphiVersion);
-  lProperties.Properties.Add(VersionSpecificCompilerSwitches(lDelphi));
+  lProperties.Properties.Values[ENV_DELPHI_SHORTNAME] := lDelphi.ShortName;
+  lProperties.Properties.Values[ENV_DELPHI_PRODUCTNAME] := lDelphi.ProductName;
+
+  lProperties.Properties.Text := lProperties.Properties.Text + VersionSpecificCompilerSwitches(lDelphi);
+
   // Set Up the properties from the Project File and Appropriate version registry
   lProject := GetProjectProperties(lProject, lDelphi, lProperties);
   result := GetFinalCommandLine(lBuildText, lProject, lProperties);

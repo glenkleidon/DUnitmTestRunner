@@ -9,15 +9,18 @@ MAKE = $(ROOT)\bin\make.exe -$(MAKEFLAGS) -f$**
 DCC = $(ROOT)\bin\dcc32.exe $**
 BRCC = $(ROOT)\bin\brcc32.exe $**
 #------------------------------------------------------------------------------
-PROJECTS = TestLexerD7.exe TestBuilder.exe
+PROJECTS = TestBuilder.exe TestLexer.exe TestRunnerTests.exe
 #------------------------------------------------------------------------------
 default: $(PROJECTS)
 #------------------------------------------------------------------------------
 
-TestLexerD7.exe: Tests\TestLexerD7.dpr
+TestBuilder.exe: TestBuilder.dpr
   $(DCC)
 
-TestBuilder.exe: TestBuilder.dpr
+TestLexer.exe: Tests\TestLexer.dpr
+  $(DCC)
+
+TestRunnerTests.exe: Tests\TestRunnerTests.dpr
   $(DCC)
 
 

@@ -21,12 +21,38 @@ uses
 var lStartFolder: string;
 begin
   try
+    // Show Help
+    if FindCmdLineSwitch('?') or findCmdLineSwitch('help') then
+    begin
+      HelpMessage;
+      exit;
+    end;
+
+    // Get the Builders start folder
     TestBuilderRootFolder := extractFilePath(Paramstr(0));
-    lStartFolder := Paramstr(1);
+
+    // Get the Start in folder.
+    lStartFolder := GetStartFolder;
     if (copy(lStartfolder,1,1)='.') then
       lStartFolder := Expandfilename(TestBuilderRootFolder+lStartFolder);
-    TDUnitmTestBuilder.BuildAndRunTests(lStartFolder);
-    if FindCmdLineSwitch('p') then readln;
+    if length(lStartFolder)=0 then
+    begin
+      writeln('Syntax Error: Start in Folder not specified');
+      HelpMessage;
+      exit;
+    end;
+
+    // Set the Script Name
+    ScriptName := GetScriptNameCmd;
+
+    // Build the Script
+    TDUnitmTestBuilder.BuildAndRunTests(lStartFolder, GetVersionCmd,
+       GetExcludeListCmd, GetIncludeListCmd);
+
+    // Optionally run the Script.
+    if FindCmdLineSwitch('b') then exit;
+
+
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
