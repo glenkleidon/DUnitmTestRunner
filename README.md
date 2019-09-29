@@ -83,7 +83,7 @@ Although the version switch is optional, you should always get into the habit of
 Opening in notepad
 ```
 ### Run all tests in a folder against Delphi XE2, but dont open the result 
-Typically you can use this open if you are monitoring the result file (typically "TestRunnerResults.txt") using a continous tail or a windows viwer like Notepad++ with the tail option enabled.
+Typically you can use this open if you are monitoring the result file (typically "TestRunnerResults.txt") using a continous tail or a text viewer like Notepad++ with the tail option enabled.
 
 `>TestBuilder c:\DelphiProjects\MyBigProject\ -v:XE2`
 ```
