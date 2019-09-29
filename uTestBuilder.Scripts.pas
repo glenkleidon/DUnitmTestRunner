@@ -29,8 +29,8 @@ const
     '  @ECHO ALL <PROJECTNAME> TESTS PASSED>>%TEST_RESULTS%'#13#10 +
     ' ) else ('#13#10 + '  SET EXIT_CODE=2'#13#10 +
     '  @ECHO Tests for <PROJECTNAME> FAILED! '#13#10 +
-    '  @ECHO Tests for <PROJECTNAME> FAILED!>>%TEST_RESULTS%'#13#10 +
-    ')'#13#10 + ') ELSE ('#13#10 + ' @ECHO BUILD FAILED!'#13#10 +
+    '  @ECHO Tests for <PROJECTNAME> FAILED!>>%TEST_RESULTS%'#13#10 + ')'#13#10
+    + ') ELSE ('#13#10 + ' @ECHO BUILD FAILED!'#13#10 +
     ' @ECHO BUILD FAILED!>>%TEST_RESULTS%'#13#10 + ' SET EXIT_CODE=1'#13#10 +
     ')'#13#10;
 
@@ -187,12 +187,12 @@ begin
     ChangeFileExt(AProject.ProjectName, ''), [rfReplaceAll, rfIgnoreCase]);
 
   result := StringReplace(result, '<DELPHISHORTNAME>',
-    AProperties.Properties.values[ENV_DELPHI_SHORTNAME], [rfReplaceAll,
-    rfIgnoreCase]);
+    AProperties.Properties.values[ENV_DELPHI_SHORTNAME],
+    [rfReplaceAll, rfIgnoreCase]);
 
   result := StringReplace(result, '<DELPHIPRODUCTNAME>',
-    AProperties.Properties.values[ENV_DELPHI_PRODUCTNAME], [rfReplaceAll,
-    rfIgnoreCase]);
+    AProperties.Properties.values[ENV_DELPHI_PRODUCTNAME],
+    [rfReplaceAll, rfIgnoreCase]);
 
   result := StringReplace(result, '<OUTPUTPATH>', AProject.OutputPath,
     [rfReplaceAll, rfIgnoreCase]);
@@ -205,8 +205,8 @@ begin
   result := StringReplace(result, '<DCCEXE>', AProject.DCCExe,
     [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<SWITCH_NOCONFIG>',
-    AProperties.Properties.values['SWITCH_NOCONFIG'], [rfReplaceAll,
-    rfIgnoreCase]);
+    AProperties.Properties.values['SWITCH_NOCONFIG'],
+    [rfReplaceAll, rfIgnoreCase]);
 
   if length(AProject.UnitAliases) = 0 then
     result := StringReplace(result, '-A<UNITALIASES> ', '', [rfIgnoreCase])
@@ -225,12 +225,12 @@ begin
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
 
   result := StringReplace(result, '<EXEOUTPUTPATH>',
-    includeTrailingPathDelimiter(AProject.OutputPath), [rfIgnoreCase,
-    rfReplaceAll]); // For scripting usually
+    includeTrailingPathDelimiter(AProject.OutputPath),
+    [rfIgnoreCase, rfReplaceAll]); // For scripting usually
 
   result := StringReplace(result, '<SWITCH_DCUPATH>',
-    AProperties.Properties.values['SWITCH_DCUPATH'], [rfReplaceAll,
-    rfIgnoreCase]);
+    AProperties.Properties.values['SWITCH_DCUPATH'],
+    [rfReplaceAll, rfIgnoreCase]);
   result := StringReplace(result, '<DCUOUTPUTPATH>',
     QuoteDirectories(AProject.OutputPath), [rfIgnoreCase]);
 
@@ -244,8 +244,8 @@ begin
 
   // Expand the Search Paths
   AProject.UnitSearchPath := AProperties.Handlers.ExpandDelphiEnvVariables
-    (AppendPath(AProject.UnitSearchPath,
-      AProperties.Properties.values[ENV_BDS_DCUPATH]));
+    (AppendPath(AProject.UnitSearchPath, AProperties.Properties.values
+    [ENV_BDS_DCUPATH]));
   // Early Versions of BDS had the Platform set to ANYCPU by default (Hacky fix below)
   // TODO : fix hacky ANYCPU replacement
   AProject.UnitSearchPath := StringReplace(AProject.UnitSearchPath,
@@ -263,15 +263,15 @@ begin
 
   result := StringReplace(result, '<INCLUDESEARCHPATH>',
     QuoteDirectories(AppendPath(AProject.UnitSearchPath,
-        AProject.IncludeSearchPath)), [rfIgnoreCase]);
+    AProject.IncludeSearchPath)), [rfIgnoreCase]);
 
   result := StringReplace(result, '<OBJECTSEARCHPATH>',
     QuoteDirectories(AppendPath(AProject.UnitSearchPath,
-        AProject.ObjectSearchPath)), [rfIgnoreCase]);
+    AProject.ObjectSearchPath)), [rfIgnoreCase]);
 
   result := StringReplace(result, '<RESOURCESEARCHPATH>',
     QuoteDirectories(AppendPath(AProject.UnitSearchPath,
-        AProject.ResourceSearchPath)), [rfIgnoreCase]);
+    AProject.ResourceSearchPath)), [rfIgnoreCase]);
 
   if length(AProject.Namespaces) = 0 then
     result := StringReplace(result, '-NS<NAMESPACES> ', '', [rfIgnoreCase])
@@ -351,13 +351,13 @@ begin
     lReg.OpenKeyReadOnly(lCurrentKey);
     if lReg.ValueExists(REG_VALUE_SEARCHPATH) then
     begin
-      result.UnitSearchPath := QuoteDirectories
-        (AppendPath(result.UnitSearchPath,
-          lReg.ReadString(REG_VALUE_SEARCHPATH)));
+      result.UnitSearchPath :=
+        QuoteDirectories(AppendPath(result.UnitSearchPath,
+        lReg.ReadString(REG_VALUE_SEARCHPATH)));
     end;
 
-    AProperties.Properties.values[ENV_STUDIONAME] := DelphiStudioByDelphiVersion
-      (AVersion.DelphiVersion);
+    AProperties.Properties.values[ENV_STUDIONAME] :=
+      DelphiStudioByDelphiVersion(AVersion.DelphiVersion);
     AProperties.Properties.values[REG_BDS] := result.DelphiRootPath;
     AProperties.Properties.values[REG_BDSBIN] := result.DelphiBinPath;
     AProperties.Properties.values[REG_BDSINCLUDE] := result.IncludeSearchPath;
@@ -379,9 +379,8 @@ begin
   AProperties.Properties.Text := AProperties.Properties.Text +
     GetTargetProperties(AProject.DelphiBinPath);
 
-  AProperties.ExtractPropertiesFromDProj
-    (AProject.ProjectDir + '\' + ChangeFileExt(AProject.ProjectName,
-      '.dproj'));
+  AProperties.ExtractPropertiesFromDProj(AProject.ProjectDir + '\' +
+    ChangeFileExt(AProject.ProjectName, '.dproj'));
 
   result.ConditionalDefines := AProperties.Properties.values['DCC_Define'];
   result.TargetPlatform := AProperties.Properties.values['Platform'];
@@ -402,10 +401,10 @@ begin
   // Search Path
   lProperty := Trim(AProject.UnitSearchPath);
   if (length(lProperty) > 0) and (copy(lProperty, length(lProperty), 1) <> ';')
-    then
+  then
     lProperty := ';' + lProperty;
-  result.UnitSearchPath := AProperties.Properties.values['DCC_UnitSearchPath']
-    + lProperty;
+  result.UnitSearchPath := AProperties.Properties.values['DCC_UnitSearchPath'] +
+    lProperty;
 
   result.IncludeSearchPath := result.UnitSearchPath + ';' +
     AProperties.Properties.values['BRCC_IncludePath'];
@@ -441,15 +440,14 @@ begin
     if (AValue <> '-') and (AValue <> '+') then
       AProject.CriticalFlags := Trim(AProject.CriticalFlags + '-$M' + AValue);
   end
-  else if ((copy(AFlag, 1, 1) = '$') and (pos(' ' + AFlag + ' ', ' $C $D') < 1)
-    ) then
+  else if ((copy(AFlag, 1, 1) = '$') and (pos(' ' + AFlag + ' ', ' $C $D') < 1))
+  then
     AProject.CriticalFlags := Trim(AProject.CriticalFlags + format(' -%s%s',
-        [AFlag, AValue]));
+      [AFlag, AValue]));
 end;
 
-Function PropertiesFromCFG(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
-  : TDUnitMBuildData;
+Function PropertiesFromCFG(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
+  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
 var
   lFile: TStringlist;
   i, fl: integer;
@@ -458,8 +456,8 @@ begin
   result := AProject;
   lFile := TStringlist.Create;
   try
-    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir)
-        + ChangeFileExt(AProject.ProjectName, '.cfg'));
+    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir) +
+      ChangeFileExt(AProject.ProjectName, '.cfg'));
     for i := 0 to lFile.Count - 1 do
     begin
       lValue := lFile[i];
@@ -478,9 +476,8 @@ begin
   end;
 end;
 
-Function PropertiesFromDOF(AProject: TDUnitMBuildData;
-  AVersion: TDelphiVersion; AProperties: IDelphiProjectProperties)
-  : TDUnitMBuildData;
+Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
+  AProperties: IDelphiProjectProperties): TDUnitMBuildData;
 var
   lFile: TStringlist;
   i, p, r: integer;
@@ -502,8 +499,8 @@ begin
   result := AProject;
   lFile := TStringlist.Create;
   try
-    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir)
-        + ChangeFileExt(AProject.ProjectName, '.dof'));
+    lFile.LoadFromFile(includeTrailingPathDelimiter(AProject.ProjectDir) +
+      ChangeFileExt(AProject.ProjectName, '.dof'));
 
     // Directories and Conditionals
     result.UnitAliases := lFile.values['UnitAliases'];
@@ -563,10 +560,10 @@ begin
   if AVersion.DelphiVersion < 9 then
   begin
     if fileExists(format('%s\%s', [AProject.ProjectDir,
-        ChangeFileExt(AProject.ProjectName, '.dof')])) then
+      ChangeFileExt(AProject.ProjectName, '.dof')])) then
       result := PropertiesFromDOF(AProject, AVersion, AProperties)
     else if fileExists(format('%s\%s', [AProject.ProjectDir,
-        ChangeFileExt(AProject.ProjectName, '.cfg')])) then
+      ChangeFileExt(AProject.ProjectName, '.cfg')])) then
       result := PropertiesFromCFG(AProject, AVersion, AProperties);
   end
   else
@@ -620,12 +617,12 @@ begin
   if lDelphi.DelphiVersion = -1 then
     raise Exception.CreateFmt('Delphi Version %s not found', [ADelphiVersion]);
   // Set Version Specific Properties
-  lProperties.Properties.values[ENV_PRODUCTVERSION] := DelphiProductVersion
-    (lDelphi);
+  lProperties.Properties.values[ENV_PRODUCTVERSION] :=
+    DelphiProductVersion(lDelphi);
   lProperties.Properties.values[ENV_BDSCOMMONDIR] := DEFAULT_BDSCOMMON;
   lProperties.Properties.values[ENV_BDSUSERDIR] := DEFAULT_BDSUSERDIR;
-  lProperties.Properties.values[ENV_BDSCOMPANY] := DelphiCompanyByDelphiVersion
-    (lDelphi.DelphiVersion);
+  lProperties.Properties.values[ENV_BDSCOMPANY] :=
+    DelphiCompanyByDelphiVersion(lDelphi.DelphiVersion);
   lProperties.Properties.values[ENV_DELPHI_SHORTNAME] := lDelphi.ShortName;
   lProperties.Properties.values[ENV_DELPHI_PRODUCTNAME] := lDelphi.ProductName;
   if lDelphi.DelphiVersion >= 15 then
