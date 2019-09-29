@@ -140,12 +140,12 @@ end;
 
 function GetIncludeListCmd: string;
 begin
-  result := GetCommandLineValue('EXCLUDE');
+  result := GetCommandLineValue('INCLUDE');
 end;
 
 function GetExcludeListCmd: string;
 begin
-  result := GetCommandLineValue('INCLUDE');
+  result := GetCommandLineValue('EXCLUDE');
 end;
 
 function GetScriptNameCmd: string;
@@ -207,6 +207,13 @@ var
      result :=
        (length(lProjectLabel)=0) or
        (sameText(lProjectLabel+'.dpr', TestBuilderProject)) or
+       (
+         (Self.ExcludeList.IndexOf('*')>=0) and
+         (
+           (Self.IncludeList.IndexOf(lProjectLabel)<0) and
+           (Self.IncludeList.IndexOf(lProjectLabel+'.dpr')<0)
+         )
+       ) or
        (Self.ExcludeList.IndexOf(lProjectLabel)>=0) or
        (Self.ExcludeList.IndexOf(lProjectLabel+'.dpr')>=0);
   end;
