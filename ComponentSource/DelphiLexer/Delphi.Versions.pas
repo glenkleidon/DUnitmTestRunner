@@ -420,7 +420,7 @@ begin
            includeTrailingPathDelimiter(format(lKey, [lRegpath,lVersion]));
         exit;
       end;
-    12:
+    12..14:
       begin
         lKey := CODEGEAR_KEY;
         SetRegOverride(REG_BDS);
