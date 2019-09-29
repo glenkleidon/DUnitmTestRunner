@@ -82,7 +82,7 @@ const
 
 implementation
 
-uses classes;
+uses classes, windows;
 
 procedure Prepare;
 begin
@@ -102,7 +102,7 @@ end;
 // Comments
 Procedure StripWhiteSpace_Works_as_expected;
 var
-  lResult, lExpected, lTestMessage: string;
+  lResult, lExpected: string;
 begin
   newTest('Empty String returns empty');
   lExpected := '';
@@ -149,7 +149,7 @@ end;
 
 procedure ResetXMLNode_Works_as_expected;
 var
-  lResult, lExpected: TXMLNode;
+  lResult: TXMLNode;
 begin
   newTest('Empty result is assigned default values');
   lResult := ResetXMLNode;
@@ -255,7 +255,7 @@ begin
   newTest('Load chuncker from file');
   lList := TStringlist.Create;
   lFilePath := GetEnvironmentVariable('TEMP') + 'XMLNodeReadertest.dproj';
-  deleteFile(lFilePath);
+  sysUtils.deleteFile(lFilePath);
 
   lList := TStringlist.Create;
   try
@@ -264,7 +264,7 @@ begin
     lNodeReader := TXmlNodeReader.CreateFromFile(lFilePath);
   finally
     freeandnil(lList);
-    deleteFile(lFilePath);
+    sysUtils.deleteFile(lFilePath);
   end;
   newTest('File Content is visible');
   checkisEqual(TEST_DATA_DPROJ_2003 + #13#10, lNodeReader.Content);

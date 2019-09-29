@@ -122,6 +122,7 @@ begin
   begin
     if length(Paramstr(i))=0 then continue;
     lSwitchChar := char(Paramstr(i)[1]);
+    if pos(lSwitchChar,ASwitchChars)=0 then continue;
     lSwitch := copy(Paramstr(i),2,l);
     if sametext(ASwitch, lSwitch) then
     begin
@@ -194,7 +195,6 @@ var
   i: Integer;
   lProject: string;
   lTestSection : string;
-  lBuilderName: string;
 
   ////
   // Ensure that this project is a target

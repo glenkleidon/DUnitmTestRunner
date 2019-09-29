@@ -58,7 +58,7 @@ begin
       exit;
     end;
     Writeln('Building and Executing Tests');
-    ShellExecute(0, 'open', pchar(ScriptName),Pchar(GetOpenWithCMD),0,sw_hide);
+    ShellExecute(0, 'open', pchar(ScriptName),Pchar(GetOpenWithCMD),Nil,sw_hide);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
