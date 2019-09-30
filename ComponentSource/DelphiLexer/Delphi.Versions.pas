@@ -532,7 +532,7 @@ end;
 initialization
  // check for a registry override;
  {$IFDEF HAS_INLINE}
-  //FindCmdLineSwitch('r', RegistryOverride);
+  FindCmdLineSwitch('r', RegistryOverride);
  {$ELSE}
     // TODO
  {$ENDIF}
