@@ -3,14 +3,14 @@ The DUnitm Test Runner is a Delphi console project that allows you automatically
 
 It is also ideal to use with continuous delivery systems like Microsoft DevOps (TFS), Bamboo, Team City, Final Builder etc, and it is especially effective when using Delphi Project bundles.  It will report to the build system if there have been test failures so that the build process can return failed Test results.
 
-Like _*DUnitm*_ **all versions of Delphi are supported back to Delphi 5** (Delphi4 probably also works).  You can run tests for different versions of Delphi simply by specifying the version of Delphi in the command line if that version of delphi is installed AND your project has compatible language features. 
+It can build and run test cases for **all versions of Delphi are supported back to Delphi 5** (Delphi4 probably also works).  You can run tests for different versions of Delphi simply by specifying the version of Delphi in the command line if that version of delphi is installed AND your project has compatible language features. 
 
 There is a single executable _*TestBuilder.exe*_ which can be installed locally or globally to run the tests.  
 
 ## Building and Installing DUnitmTestRunner 
 You can get the binary and/or the Source Code for _*TestBuilder*_ from the releases section of this GitHub project.
 
-If you just want to run your tests, there is no need to build test runner.  _*TestBuilder*_ is a small standalone EXE that can compile and run your DUnitM test cases for any version of Delphi.  The release build is typically built using Delphi 7 (to make it as small as possible), but you can build TestBuilder.dpr using any version of Delphi after Delphi 5. 
+If you just want to run your tests, there is no need to build test runner.  _*TestBuilder*_ is a small standalone EXE, available in the Releases Section of this repo, that can compile and run your DUnitM test cases for any version of Delphi.  The release build is typically built using Delphi 7 (to make it as small as possible). You can **build** TestBuilder.dpr using any version of Delphi after Delphi 6.
 
 ### Getting the Binary
 Get Release [R0.1](https://github.com/glenkleidon/DUnitmTestRunner/releases/download/R0.1/TestBuilder.exe) from Github. There MAY be newer releases please check [Releases](https://github.com/glenkleidon/DUnitmTestRunner/releases).
