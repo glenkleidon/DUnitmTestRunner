@@ -258,9 +258,11 @@ begin
   lTestBuilder := TDUnitmTestBuilder.Create;
   try
     lTestBuilder.RootFolder := AStartFolder;
-    lTestBuilder.IncludeList.Text := AInclude;
-    lTestBuilder.ExcludeList.Text := AExclude;
-    result := lTestBuilder.BuildandRun(AVersion);
+    lTestBuilder.IncludeList.Text := StringReplace(AInclude,';',
+       #13#10,[rfReplaceAll]);
+    lTestBuilder.ExcludeList.Text := StringReplace(AExclude,';',
+       #13#10,[rfReplaceAll]);
+    result := lTestBuilder.BuildandRun(AVersion);    result := lTestBuilder.BuildandRun(AVersion);
   finally
     freeandnil(lTestBuilder);
   end;
