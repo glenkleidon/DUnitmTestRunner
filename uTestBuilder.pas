@@ -262,7 +262,7 @@ begin
        #13#10,[rfReplaceAll]);
     lTestBuilder.ExcludeList.Text := StringReplace(AExclude,';',
        #13#10,[rfReplaceAll]);
-    result := lTestBuilder.BuildandRun(AVersion);    result := lTestBuilder.BuildandRun(AVersion);
+    result := lTestBuilder.BuildandRun(AVersion);
   finally
     freeandnil(lTestBuilder);
   end;
