@@ -80,10 +80,9 @@ implementation
 
 uses RecursiveFolderSearch, uTestBuilder.ProjectInfo, uTestBuilder.Scripts;
 const HELP_MESSAGE =
-//   12345678901234567890123456789012345678901234567890123456789012345678901234567890
    '>TestBuilder [-|/][?|help] | [[-|/]b] [[-|/][EXCLUDE[:]<[*]|Project;Project...>]'#13#10 +
    '     [[-|/][INCLUDE[:]<Project1;Project2...>] [[-|/]S:<ScriptName>] '#13#10+
-   '     [[-|/]V:<DelphiVersion>] [[-|/]O:<OpenWith>]'#13#10+
+   '     [[-|/]V:<DelphiVersion>] [[-|/]O:<OpenWith>] [[-|/]R[:]<RegOverride>]'#13#10+
    '     <StartInFolder>'#13#10#13#10+
    ' ?|help           : This Message'#13#10+
    ' b                : Build SCRIPT ONLY, do not RUN'#13#10 +
@@ -95,6 +94,8 @@ const HELP_MESSAGE =
    '                    eg: -v:D7 -v:Delphi7 -v:XE2 -v:Berlin -v:Seattle etc'#13#10+
    ' O:<OpenWith>     : Open the test result with a specific program default (none)'#13#10+
    '                    eg: -O:Notepad - opens the Test results in notepad'#13#10+
+   ' R:<RegOverride>  : Use Alternate Registry Switch'#13#10+
+   '                    eg: For projects overriding the Reg Path (using the /r switch)'#13#10+
    ' <ScriptName>     : Full pathname to Test Runner Script '#13#10+
    '                  (<StartInFolder>'+DEFAULT_SCRIPT_NAME+' if not supplied)'#13#10 +
    ' <StartInFolder>  : (Required) Folder to recursively search for test projects.';
