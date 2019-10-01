@@ -520,8 +520,7 @@ Function PropertiesFromDOF(AProject: TDUnitMBuildData; AVersion: TDelphiVersion;
 var
   lFile: TStringlist;
   i, p, r: integer;
-  lF: boolean;
-  lValue, lPrefix, lFlag: string;
+  lValue, lFlag: string;
   lSection: string;
 
   function SetSection(AValue: string): boolean;

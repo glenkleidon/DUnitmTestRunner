@@ -314,21 +314,8 @@ var
   lArgumentHandlers : IDelphiEnvHandlers;
 
   Function GetArgument(AArgument: string): string;
-  var
-    lArgument: string;
   begin
     result := lArgumentHandlers.ExpandPropertyValue(AArgument);
-   { if copy(AArgument, 1, 2) = '$(' then
-    begin
-      lArgument := copy(AArgument, 3, length(AArgument) - 3);
-      result := AProperties.Values[lArgument];
-    end
-    else if copy(AArgument, 1, 1) = '''' then
-      result := copy(AArgument, 2, length(AArgument) - 1)
-    else
-    begin
-      result := AArgument;
-    end; }
   end;
 
   Function isLastOperator(AIndex: Integer;

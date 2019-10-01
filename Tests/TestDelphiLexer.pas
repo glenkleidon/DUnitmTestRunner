@@ -143,6 +143,7 @@ var
   lText: string;
   lResult: TTokenInfo;
 begin
+  PasFile.Text := TEST_DATA_DPR_FILE;
 
   lText := PasFile[18] + CR;
 
@@ -167,6 +168,7 @@ var
   lText: string;
   lResult: TTokenInfo;
 begin
+  PasFile.Text := TEST_DATA_DPR_FILE;
 
   lText := PasFile[26] + CR + PasFile[27];
 
@@ -295,7 +297,8 @@ begin
   CheckisTrue(ltoken.TokenType=dtKeyword);
   lToken := NextToken(TEST_DATA_UNIT_1, lToken.EndPos+1);
   checkisEqual('SomeThirdUnit', lToken.Token);
-
+  NewTest('Deliberate Failure');
+  checkisTrue(false);
 end;
 
 Procedure Check_TextBetweenTokens_Returns_Correct_result;
@@ -306,6 +309,9 @@ begin
     TEST_DATA_UNIT_1);
   DisplayModeRows(true);
   checkIsEqual(' SysUtils, SomeUnit, SomeOtherUnit',lResult);
+
+
+
 
 end;
 
